@@ -41,6 +41,63 @@ object DataCodec {
         )
     }
 
+    // ---------- customer app data ----------
+
+    fun encodeCustomerApp(d: CustomerAppData): String {
+        val root = JSONObject()
+        root.put("version", VERSION)
+        root.put("kind", "customer-app")
+        root.put("loggedIn", d.loggedIn)
+        if (d.customer != null) root.put("customer", customer(d.customer))
+        root.put("addresses", strings(d.addresses))
+        root.put("favorites", strings(d.favorites))
+        root.put("cart", jsonArray(d.cart) { l ->
+            val o = JSONObject()
+            o.put("productId", l.productId)
+            o.put("color", l.color)
+            o.put("size", l.size)
+            o.put("quantity", l.quantity)
+            o
+        })
+        root.put("orders", jsonArray(d.orders) { order(it) })
+        root.put("ledger", jsonArray(d.ledger) { entry(it) })
+        val w = d.wholesaleRequest
+        if (w != null) {
+            val o = JSONObject()
+            o.put("businessName", w.businessName)
+            o.put("city", w.city)
+            o.put("note", w.note)
+            o.put("at", w.at)
+            root.put("wholesaleRequest", o)
+        }
+        return root.toString()
+    }
+
+    fun decodeCustomerApp(text: String): CustomerAppData {
+        val root = JSONObject(text)
+        val version = root.optInt("version", 0)
+        require(version == VERSION) { "unsupported data version $version" }
+        val customerObj = root.optJSONObject("customer")
+        val requestObj = root.optJSONObject("wholesaleRequest")
+        return CustomerAppData(
+            customer = if (customerObj == null) null else readCustomer(customerObj),
+            addresses = root.optJSONArray("addresses").strings(),
+            favorites = root.optJSONArray("favorites").strings().toSet(),
+            cart = root.optJSONArray("cart").objects {
+                CartLine(it.getString("productId"), it.getString("color"), it.getString("size"), it.getInt("quantity"))
+            },
+            orders = root.optJSONArray("orders").objects { readOrder(it) },
+            ledger = root.optJSONArray("ledger").objects { readEntry(it) },
+            wholesaleRequest = if (requestObj == null) null else WholesaleRequest(
+                requestObj.optString("businessName", ""),
+                requestObj.optString("city", ""),
+                requestObj.optString("note", ""),
+                requestObj.optLong("at", 0L)
+            ),
+            loggedIn = root.optBoolean("loggedIn", false)
+        )
+    }
+
     // ---------- helpers ----------
 
     private fun <T> jsonArray(items: List<T>, f: (T) -> JSONObject): JSONArray {
@@ -190,5 +247,82 @@ object DataCodec {
         at = o.optLong("at", 0L),
         refId = o.nullableString("refId"),
         note = o.optString("note", "")
+    )
+
+    // ---------- order ----------
+
+    private fun order(o: Order): JSONObject {
+        val j = JSONObject()
+        j.put("id", o.id)
+        j.put("number", o.number)
+        j.put("customerId", o.customerId)
+        j.put("channel", o.channel.name)
+        j.put("paymentMethod", o.paymentMethod.name)
+        j.put("shippingMethod", o.shippingMethod.name)
+        j.put("createdAt", o.createdAt)
+        j.put("status", o.status.name)
+        j.put("shippingCost", o.shippingCost)
+        j.put("extraDiscount", o.extraDiscount)
+        j.put("paidAmount", o.paidAmount)
+        if (o.trackingCode != null) j.put("trackingCode", o.trackingCode)
+        j.put("stockCommitted", o.stockCommitted)
+        j.put("receiverName", o.receiverName)
+        j.put("receiverPhone", o.receiverPhone)
+        j.put("address", o.address)
+        j.put("items", jsonArray(o.items) { i ->
+            val x = JSONObject()
+            x.put("productId", i.productId)
+            x.put("productName", i.productName)
+            x.put("color", i.color)
+            x.put("size", i.size)
+            x.put("quantity", i.quantity)
+            x.put("unitPrice", i.unitPrice)
+            x.put("unitCost", i.unitCost)
+            x.put("discountPercent", i.discountPercent)
+            x
+        })
+        j.put("history", jsonArray(o.history) { h ->
+            val x = JSONObject()
+            if (h.from != null) x.put("from", h.from.name)
+            x.put("to", h.to.name)
+            x.put("at", h.at)
+            x.put("note", h.note)
+            x
+        })
+        return j
+    }
+
+    private fun readOrder(j: JSONObject) = Order(
+        id = j.getString("id"),
+        number = j.getString("number"),
+        customerId = j.getString("customerId"),
+        channel = enumOf(j.optString("channel", ""), Channel.RETAIL),
+        items = j.optJSONArray("items").objects {
+            OrderItem(
+                it.getString("productId"), it.getString("productName"), it.getString("color"), it.getString("size"),
+                it.getInt("quantity"), it.getLong("unitPrice"), it.optLong("unitCost", 0L), it.optInt("discountPercent", 0)
+            )
+        },
+        paymentMethod = enumOf(j.optString("paymentMethod", ""), PaymentMethod.CARD_TO_CARD),
+        shippingMethod = enumOf(j.optString("shippingMethod", ""), ShippingMethod.COURIER),
+        createdAt = j.optLong("createdAt", 0L),
+        status = enumOf(j.optString("status", ""), OrderStatus.NEW),
+        shippingCost = j.optLong("shippingCost", 0L),
+        extraDiscount = j.optLong("extraDiscount", 0L),
+        paidAmount = j.optLong("paidAmount", 0L),
+        trackingCode = j.nullableString("trackingCode"),
+        stockCommitted = j.optBoolean("stockCommitted", false),
+        history = j.optJSONArray("history").objects {
+            val from = it.nullableString("from")
+            StatusChange(
+                if (from == null) null else enumOf(from, OrderStatus.NEW),
+                enumOf(it.optString("to", ""), OrderStatus.NEW),
+                it.optLong("at", 0L),
+                it.optString("note", "")
+            )
+        },
+        receiverName = j.optString("receiverName", ""),
+        receiverPhone = j.optString("receiverPhone", ""),
+        address = j.optString("address", "")
     )
 }

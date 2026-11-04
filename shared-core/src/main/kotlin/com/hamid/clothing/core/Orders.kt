@@ -46,7 +46,10 @@ data class Order(
     val paidAmount: Long = 0L,
     val trackingCode: String? = null,
     val stockCommitted: Boolean = false,
-    val history: List<StatusChange> = emptyList()
+    val history: List<StatusChange> = emptyList(),
+    val receiverName: String = "",
+    val receiverPhone: String = "",
+    val address: String = ""
 ) {
     val subtotal: Long get() = items.sumOf { it.lineTotal }
     val total: Long get() = (subtotal - extraDiscount + shippingCost).coerceAtLeast(0L)

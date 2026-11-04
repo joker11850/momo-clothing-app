@@ -79,6 +79,14 @@ object SampleData {
         LedgerEntry("l-3", "c-3", EntryType.PURCHASE, 8_500_000L, now - 35 * DAY, note = "خرید عمده")
     )
 
+    /** Demo discounts; "SALAM10" is a demo coupon code. */
+    fun discounts(): List<Discount> = listOf(
+        Discount("d-1", "فروش ویژه شومیز", 15, DiscountScope.PRODUCTS, setOf("p-1")),
+        Discount("d-2", "فروش ویژه ست خواب", 14, DiscountScope.PRODUCTS, setOf("p-6")),
+        Discount("d-3", "فروش ویژه دامن", 10, DiscountScope.PRODUCTS, setOf("p-5")),
+        Discount("d-4", "کد خوش‌آمد", 10, code = "SALAM10")
+    )
+
     fun snapshot(now: Long): StoreSnapshot =
         StoreSnapshot(true, categories(), products(), customers(now), ledger(now))
 }
