@@ -54,6 +54,9 @@ data class Product(
     }
 
     val totalStock: Int get() = variants.sumOf { it.stock }
+
+    /** Variants whose stock is at or below the product's low-stock threshold. */
+    val lowStockVariants: List<Variant> get() = variants.filter { it.stock <= lowStockThreshold }
 }
 
 data class Supplier(val id: String, val name: String, val phone: String = "", val note: String = "")

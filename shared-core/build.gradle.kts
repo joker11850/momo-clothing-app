@@ -16,6 +16,9 @@ kotlin {
 }
 
 dependencies {
+    // org.json ships with Android; it is only needed explicitly for JVM unit tests
+    compileOnly("org.json:json:20240303")
+    testImplementation("org.json:json:20240303")
     testImplementation(kotlin("test"))
 }
 
