@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "ClothingStoreSuite"
-include(":admin-app", ":customer-app")
+include(":admin-app", ":customer-app", ":shared-core")
