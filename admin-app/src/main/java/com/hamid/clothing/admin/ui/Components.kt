@@ -5,6 +5,7 @@ package com.hamid.clothing.admin.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,19 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.hamid.clothing.core.TextNorm
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -210,6 +223,87 @@ fun <T> ChoiceChips(
     ) {
         for ((value, label) in options) {
             FilterChip(selected = value == selected, onClick = { onSelect(value) }, label = { Text(label) })
+        }
+    }
+}
+
+/** Searchable single-choice list in a dialog. [options] are (id, label) pairs. */
+@Composable
+fun PickerDialog(
+    title: String,
+    options: List<Pair<String, String>>,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    val q = TextNorm.normalize(query)
+    val filtered = if (q.isEmpty()) options else options.filter { TextNorm.normalize(it.second).contains(q) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                AdminTextField("جست‌وجو", query, { query = it })
+                if (filtered.isEmpty()) Text("موردی پیدا نشد", color = Muted)
+                LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                    items(filtered.take(60), key = { it.first }) { option ->
+                        Text(
+                            option.second,
+                            modifier = Modifier.fillMaxWidth().clickable { onPick(option.first) }.padding(vertical = 12.dp, horizontal = 4.dp)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text("بستن") } }
+    )
+}
+
+/** Three small fields for a Jalali date (year / month / day). */
+@Composable
+fun JalaliDateField(
+    label: String,
+    year: String,
+    month: String,
+    day: String,
+    onChange: (String, String, String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Muted)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            IntField("سال", year, { onChange(it, month, day) }, Modifier.weight(1.4f))
+            IntField("ماه", month, { onChange(year, it, day) }, Modifier.weight(1f))
+            IntField("روز", day, { onChange(year, month, it) }, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun StatusText(text: String, color: Color) {
+    Text(text, color = color, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+}
+
+/** Simple bar chart. [values] are (label, amount) pairs, oldest first. */
+@Composable
+fun SalesBars(values: List<Pair<String, Long>>, modifier: Modifier = Modifier) {
+    val max = (values.maxOfOrNull { it.second } ?: 0L).coerceAtLeast(1L)
+    Row(
+        modifier = modifier.fillMaxWidth().height(150.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        for ((label, amount) in values) {
+            val fraction = amount.toFloat() / max.toFloat()
+            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((110f * fraction).coerceAtLeast(if (amount > 0) 3f else 0f).dp)
+                        .background(Gold, RoundedCornerShape(4.dp))
+                )
+                Text(label, style = MaterialTheme.typography.labelSmall, color = Muted, textAlign = TextAlign.Center)
+            }
         }
     }
 }

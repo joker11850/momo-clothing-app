@@ -87,6 +87,80 @@ object SampleData {
         Discount("d-4", "کد خوش‌آمد", 10, code = "SALAM10")
     )
 
-    fun snapshot(now: Long): StoreSnapshot =
-        StoreSnapshot(true, categories(), products(), customers(now), ledger(now))
+    fun suppliers(): List<Supplier> = listOf(
+        Supplier("s-1", "تولیدی نگین", "09130000001", "تولیدکننده شومیز و مانتو"),
+        Supplier("s-2", "پخش مروارید", "09130000002", "اکسسوری و لباس راحتی")
+    )
+
+    fun supplierLedger(now: Long): List<LedgerEntry> = listOf(
+        LedgerEntry("l-s1", "s-1", EntryType.PURCHASE, 30_000_000L, now - 25 * DAY, note = "خرید کالا"),
+        LedgerEntry("l-s2", "s-1", EntryType.PAYMENT, 10_000_000L, now - 12 * DAY, note = "پرداخت نقدی"),
+        LedgerEntry("l-s3", "s-2", EntryType.PURCHASE, 6_000_000L, now - 8 * DAY, note = "خرید کالا")
+    )
+
+    fun cheques(now: Long): List<Cheque> = listOf(
+        Cheque("ch-1", ChequeDirection.RECEIVED, "c-2", 5_000_000L, "1234567890123456", now + 5 * DAY, "ملی"),
+        Cheque("ch-2", ChequeDirection.PAID, "s-1", 10_000_000L, "6543210987654321", now + 20 * DAY, "ملت")
+    )
+
+    fun expenses(now: Long): List<Expense> = listOf(
+        Expense("e-1", ExpenseCategory.RENT, 12_000_000L, now - 10 * DAY, "اجاره فروشگاه"),
+        Expense("e-2", ExpenseCategory.PACKAGING, 800_000L, now - 6 * DAY, "کارتن و پلاستیک"),
+        Expense("e-3", ExpenseCategory.PERSONAL, 3_000_000L, now - 4 * DAY, "هزینه شخصی")
+    )
+
+    fun bankAccounts(): List<BankAccount> = listOf(
+        BankAccount(
+            "b-1", "بانک نمونه", "صاحب حساب (نمونه)", "6037991899999993", "IR050170000000123456789012",
+            active = true, visibleToCustomers = true
+        )
+    )
+
+    fun orders(now: Long): List<Order> = listOf(
+        Order(
+            id = "o-1", number = "ORD-1001", customerId = "c-1", channel = Channel.RETAIL,
+            items = listOf(OrderItem("p-4", "شلوار کتان راسته", "بژ", "S", 1, 1_190_000L, 740_000L)),
+            paymentMethod = PaymentMethod.CARD_TO_CARD, shippingMethod = ShippingMethod.COURIER,
+            createdAt = now - 3 * DAY, status = OrderStatus.DELIVERED, paidAmount = 1_190_000L,
+            trackingCode = "TRK-1001", stockCommitted = true,
+            history = listOf(
+                StatusChange(OrderStatus.NEW, OrderStatus.AWAITING_PAYMENT, now - 3 * DAY),
+                StatusChange(OrderStatus.AWAITING_PAYMENT, OrderStatus.PAID, now - 3 * DAY + 3_600_000L),
+                StatusChange(OrderStatus.PAID, OrderStatus.PREPARING, now - 2 * DAY),
+                StatusChange(OrderStatus.PREPARING, OrderStatus.SHIPPED, now - 2 * DAY + 3_600_000L),
+                StatusChange(OrderStatus.SHIPPED, OrderStatus.DELIVERED, now - 1 * DAY)
+            ),
+            receiverName = "مریم احمدی", receiverPhone = "09120000001", address = "اصفهان"
+        ),
+        Order(
+            id = "o-2", number = "ORD-1002", customerId = "c-3", channel = Channel.WHOLESALE,
+            items = listOf(OrderItem("p-2", "شومیز یقه‌ربان‌دار", "شیری", "M", 4, 1_100_000L, 850_000L)),
+            paymentMethod = PaymentMethod.ON_ACCOUNT, shippingMethod = ShippingMethod.POST,
+            createdAt = now - 1 * DAY, status = OrderStatus.AWAITING_SELLER_APPROVAL,
+            history = listOf(StatusChange(OrderStatus.NEW, OrderStatus.AWAITING_SELLER_APPROVAL, now - 1 * DAY)),
+            receiverName = "پوشاک آرتا", receiverPhone = "09120000003", address = "نجف‌آباد"
+        ),
+        Order(
+            id = "o-3", number = "ORD-1003", customerId = "c-4", channel = Channel.RETAIL,
+            items = listOf(OrderItem("p-5", "دامن پلیسه بلند", "خاکی", "فری", 1, 972_000L, 690_000L, 10)),
+            paymentMethod = PaymentMethod.CARD_TO_CARD, shippingMethod = ShippingMethod.COURIER,
+            createdAt = now - 2 * 3_600_000L, status = OrderStatus.AWAITING_PAYMENT,
+            history = listOf(StatusChange(OrderStatus.NEW, OrderStatus.AWAITING_PAYMENT, now - 2 * 3_600_000L)),
+            receiverName = "سارا محمدی", receiverPhone = "09120000004", address = "شاهین‌شهر"
+        )
+    )
+
+    fun snapshot(now: Long): StoreSnapshot = StoreSnapshot(
+        sample = true,
+        categories = categories(),
+        products = products(),
+        customers = customers(now),
+        ledger = ledger(now) + supplierLedger(now),
+        orders = orders(now),
+        suppliers = suppliers(),
+        cheques = cheques(now),
+        expenses = expenses(now),
+        bankAccounts = bankAccounts(),
+        settings = StoreSettings(shopName = "فروشگاه پوشاک", phone = "", address = "")
+    )
 }

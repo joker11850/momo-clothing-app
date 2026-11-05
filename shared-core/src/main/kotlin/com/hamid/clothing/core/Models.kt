@@ -71,3 +71,13 @@ data class BankAccount(
     val active: Boolean = true,
     val visibleToCustomers: Boolean = false
 )
+
+data class StoreSettings(
+    val shopName: String = "",
+    val phone: String = "",
+    val address: String = "",
+    /** How long stock stays reserved for an unpaid retail order. */
+    val retailHoldHours: Int = 24,
+    /** 0 = wholesale reservations never expire on their own. */
+    val wholesaleHoldHours: Int = 0
+)

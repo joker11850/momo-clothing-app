@@ -49,6 +49,7 @@ fun ProductFormScreen(
     onDone: () -> Unit,
     onBack: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val existing = remember(productId) { store.products.firstOrNull { it.id == productId } }
 
     var name by remember(productId) { mutableStateOf(existing?.name ?: "") }
@@ -206,7 +207,11 @@ fun ProductFormScreen(
             title = "حذف کالا",
             text = "«${existing.name}» حذف شود؟",
             confirmLabel = "حذف",
-            onConfirm = { store.deleteProduct(existing.id); confirmDelete = false; onDone() },
+            onConfirm = {
+                confirmDelete = false
+                val result = store.deleteProduct(existing.id)
+                if (result == null) onDone() else toast(context, result)
+            },
             onDismiss = { confirmDelete = false }
         )
     }

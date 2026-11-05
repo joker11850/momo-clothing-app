@@ -10,7 +10,13 @@ data class StoreSnapshot(
     val categories: List<Category> = emptyList(),
     val products: List<Product> = emptyList(),
     val customers: List<Customer> = emptyList(),
-    val ledger: List<LedgerEntry> = emptyList()
+    val ledger: List<LedgerEntry> = emptyList(),
+    val orders: List<Order> = emptyList(),
+    val suppliers: List<Supplier> = emptyList(),
+    val cheques: List<Cheque> = emptyList(),
+    val expenses: List<Expense> = emptyList(),
+    val bankAccounts: List<BankAccount> = emptyList(),
+    val settings: StoreSettings = StoreSettings()
 )
 
 /** JSON (de)serialisation of [StoreSnapshot]. Uses org.json, which Android provides. */
@@ -25,6 +31,12 @@ object DataCodec {
         root.put("products", jsonArray(s.products) { product(it) })
         root.put("customers", jsonArray(s.customers) { customer(it) })
         root.put("ledger", jsonArray(s.ledger) { entry(it) })
+        root.put("orders", jsonArray(s.orders) { order(it) })
+        root.put("suppliers", jsonArray(s.suppliers) { supplier(it) })
+        root.put("cheques", jsonArray(s.cheques) { cheque(it) })
+        root.put("expenses", jsonArray(s.expenses) { expense(it) })
+        root.put("bankAccounts", jsonArray(s.bankAccounts) { bank(it) })
+        root.put("settings", settings(s.settings))
         return root.toString()
     }
 
@@ -37,7 +49,13 @@ object DataCodec {
             categories = root.optJSONArray("categories").objects { readCategory(it) },
             products = root.optJSONArray("products").objects { readProduct(it) },
             customers = root.optJSONArray("customers").objects { readCustomer(it) },
-            ledger = root.optJSONArray("ledger").objects { readEntry(it) }
+            ledger = root.optJSONArray("ledger").objects { readEntry(it) },
+            orders = root.optJSONArray("orders").objects { readOrder(it) },
+            suppliers = root.optJSONArray("suppliers").objects { readSupplier(it) },
+            cheques = root.optJSONArray("cheques").objects { readCheque(it) },
+            expenses = root.optJSONArray("expenses").objects { readExpense(it) },
+            bankAccounts = root.optJSONArray("bankAccounts").objects { readBank(it) },
+            settings = root.optJSONObject("settings")?.let { readSettings(it) } ?: StoreSettings()
         )
     }
 
@@ -324,5 +342,105 @@ object DataCodec {
         receiverName = j.optString("receiverName", ""),
         receiverPhone = j.optString("receiverPhone", ""),
         address = j.optString("address", "")
+    )
+
+    // ---------- supplier, bank, cheque, expense, settings ----------
+
+    private fun supplier(x: Supplier): JSONObject {
+        val o = JSONObject()
+        o.put("id", x.id)
+        o.put("name", x.name)
+        o.put("phone", x.phone)
+        o.put("note", x.note)
+        return o
+    }
+
+    private fun readSupplier(o: JSONObject) =
+        Supplier(o.getString("id"), o.getString("name"), o.optString("phone", ""), o.optString("note", ""))
+
+    private fun bank(b: BankAccount): JSONObject {
+        val o = JSONObject()
+        o.put("id", b.id)
+        o.put("bankName", b.bankName)
+        o.put("ownerName", b.ownerName)
+        o.put("cardNumber", b.cardNumber)
+        o.put("sheba", b.sheba)
+        o.put("accountNumber", b.accountNumber)
+        o.put("active", b.active)
+        o.put("visibleToCustomers", b.visibleToCustomers)
+        return o
+    }
+
+    private fun readBank(o: JSONObject) = BankAccount(
+        id = o.getString("id"),
+        bankName = o.optString("bankName", ""),
+        ownerName = o.optString("ownerName", ""),
+        cardNumber = o.optString("cardNumber", ""),
+        sheba = o.optString("sheba", ""),
+        accountNumber = o.optString("accountNumber", ""),
+        active = o.optBoolean("active", true),
+        visibleToCustomers = o.optBoolean("visibleToCustomers", false)
+    )
+
+    private fun cheque(c: Cheque): JSONObject {
+        val o = JSONObject()
+        o.put("id", c.id)
+        o.put("direction", c.direction.name)
+        o.put("partyId", c.partyId)
+        o.put("amount", c.amount)
+        o.put("sayadId", c.sayadId)
+        o.put("dueDate", c.dueDate)
+        o.put("bankName", c.bankName)
+        o.put("status", c.status.name)
+        o.put("note", c.note)
+        return o
+    }
+
+    private fun readCheque(o: JSONObject) = Cheque(
+        id = o.getString("id"),
+        direction = enumOf(o.optString("direction", ""), ChequeDirection.RECEIVED),
+        partyId = o.getString("partyId"),
+        amount = o.getLong("amount"),
+        sayadId = o.getString("sayadId"),
+        dueDate = o.optLong("dueDate", 0L),
+        bankName = o.optString("bankName", ""),
+        status = enumOf(o.optString("status", ""), ChequeStatus.PENDING),
+        note = o.optString("note", "")
+    )
+
+    private fun expense(e: Expense): JSONObject {
+        val o = JSONObject()
+        o.put("id", e.id)
+        o.put("category", e.category.name)
+        o.put("amount", e.amount)
+        o.put("at", e.at)
+        o.put("note", e.note)
+        return o
+    }
+
+    private fun readExpense(o: JSONObject) = Expense(
+        id = o.getString("id"),
+        category = enumOf(o.optString("category", ""), ExpenseCategory.OTHER),
+        amount = o.getLong("amount"),
+        at = o.optLong("at", 0L),
+        note = o.optString("note", "")
+    )
+
+    private fun settings(s: StoreSettings): JSONObject {
+        val o = JSONObject()
+        o.put("shopName", s.shopName)
+        o.put("phone", s.phone)
+        o.put("address", s.address)
+        o.put("retailHoldHours", s.retailHoldHours)
+        o.put("wholesaleHoldHours", s.wholesaleHoldHours)
+        return o
+    }
+
+    private fun readSettings(o: JSONObject) = StoreSettings(
+        shopName = o.optString("shopName", ""),
+        phone = o.optString("phone", ""),
+        address = o.optString("address", ""),
+        retailHoldHours = o.optInt("retailHoldHours", 24),
+        wholesaleHoldHours = o.optInt("wholesaleHoldHours", 0)
     )
 }

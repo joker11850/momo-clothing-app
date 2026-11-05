@@ -1,6 +1,13 @@
 package com.hamid.clothing.admin.ui
 
+import androidx.compose.ui.graphics.Color
+import com.hamid.clothing.admin.AdminStore
+import com.hamid.clothing.core.ChequeDirection
+import com.hamid.clothing.core.ChequeStatus
 import com.hamid.clothing.core.CreditPolicy
+import com.hamid.clothing.core.ExpenseCategory
+import com.hamid.clothing.core.JalaliDate
+import com.hamid.clothing.core.OrderStatus
 import com.hamid.clothing.core.CustomerType
 import com.hamid.clothing.core.EntryType
 import com.hamid.clothing.core.JalaliCalendar
@@ -49,3 +56,56 @@ fun parseMoney(text: String): Long =
 
 fun parseInt(text: String, default: Int = 0): Int =
     Validators.toLatinDigits(text).filter { it in '0'..'9' }.take(6).toIntOrNull() ?: default
+
+fun ChequeStatus.label(): String = when (this) {
+    ChequeStatus.PENDING -> "در دست"
+    ChequeStatus.DEPOSITED -> "به صندوق رفته"
+    ChequeStatus.CLEARED -> "وصول‌شده"
+    ChequeStatus.BOUNCED -> "برگشتی"
+}
+
+fun ChequeDirection.label(): String = when (this) {
+    ChequeDirection.RECEIVED -> "دریافتی"
+    ChequeDirection.PAID -> "پرداختی"
+}
+
+fun ExpenseCategory.label(): String = when (this) {
+    ExpenseCategory.SHIPPING -> "حمل"
+    ExpenseCategory.PACKAGING -> "بسته‌بندی"
+    ExpenseCategory.RENT -> "اجاره"
+    ExpenseCategory.SALARY -> "حقوق"
+    ExpenseCategory.STORE -> "هزینه‌های فروشگاه"
+    ExpenseCategory.PURCHASE_OVERHEAD -> "هزینه‌های جانبی خرید"
+    ExpenseCategory.PERSONAL -> "شخصی"
+    ExpenseCategory.OTHER -> "سایر"
+}
+
+fun orderStatusColor(status: OrderStatus): Color = when (status) {
+    OrderStatus.CANCELLED, OrderStatus.RETURNED -> Danger
+    OrderStatus.DELIVERED, OrderStatus.PAID -> Success
+    else -> Gold
+}
+
+/** Name of a customer or supplier by id. */
+fun partyName(store: AdminStore, id: String): String =
+    store.customers.firstOrNull { it.id == id }?.fullName
+        ?: store.suppliers.firstOrNull { it.id == id }?.name
+        ?: "نامشخص"
+
+/** Parses a Jalali date typed as three numbers; null when it is not a real date. */
+fun jalaliToMillis(year: String, month: String, day: String): Long? {
+    val y = parseInt(year, -1)
+    val m = parseInt(month, -1)
+    val d = parseInt(day, -1)
+    if (y < 1300 || y > 1500) return null
+    return try {
+        JalaliCalendar.toEpochMillis(JalaliDate(y, m, d))
+    } catch (e: IllegalArgumentException) {
+        null
+    }
+}
+
+fun todayParts(offsetDays: Int = 0): Triple<String, String, String> {
+    val d = JalaliCalendar.fromEpochMillis(System.currentTimeMillis() + offsetDays * 86_400_000L)
+    return Triple(d.year.toString(), d.month.toString(), d.day.toString())
+}
