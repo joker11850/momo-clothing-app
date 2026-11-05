@@ -53,6 +53,7 @@ sealed interface Screen {
     data class BankForm(val accountId: String?) : Screen
     data object Reports : Screen
     data object Settings : Screen
+    data object Publish : Screen
 }
 
 /** Tiny back stack: tabs replace the whole stack, other screens are pushed. */
@@ -102,7 +103,8 @@ fun AdminApp(store: AdminStore) {
                 onOpenOrders = { filter -> nav.tab(Screen.Orders(filter)) },
                 onOpenCheques = { nav.go(Screen.Cheques(ChequeDirection.RECEIVED)) },
                 onOpenReports = { nav.go(Screen.Reports) },
-                onOpenSettings = { nav.go(Screen.Settings) }
+                onOpenSettings = { nav.go(Screen.Settings) },
+                onOpenPublish = { nav.go(Screen.Publish) }
             )
             is Screen.Orders -> OrdersScreen(
                 store = store,
@@ -123,7 +125,8 @@ fun AdminApp(store: AdminStore) {
                 padding = padding,
                 initialLowStock = current.lowStockOnly,
                 onAdd = { nav.go(Screen.ProductForm(null)) },
-                onEdit = { id -> nav.go(Screen.ProductForm(id)) }
+                onEdit = { id -> nav.go(Screen.ProductForm(id)) },
+                onPublish = { nav.go(Screen.Publish) }
             )
             is Screen.ProductForm -> ProductFormScreen(
                 store = store,
@@ -221,6 +224,7 @@ fun AdminApp(store: AdminStore) {
             )
             Screen.Reports -> ReportsScreen(store, padding) { nav.back() }
             Screen.Settings -> SettingsScreen(store, padding) { nav.back() }
+            Screen.Publish -> PublishScreen(store, padding) { nav.back() }
         }
     }
 

@@ -80,6 +80,7 @@ fun ExpenseCategory.label(): String = when (this) {
     ExpenseCategory.OTHER -> "سایر"
 }
 
+@androidx.compose.runtime.Composable
 fun orderStatusColor(status: OrderStatus): Color = when (status) {
     OrderStatus.CANCELLED, OrderStatus.RETURNED -> Danger
     OrderStatus.DELIVERED, OrderStatus.PAID -> Success

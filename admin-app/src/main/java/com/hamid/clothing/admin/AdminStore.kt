@@ -5,6 +5,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.hamid.clothing.core.BankAccount
+import com.hamid.clothing.core.CatalogBuilder
+import com.hamid.clothing.core.CatalogPackage
+import com.hamid.clothing.core.JalaliCalendar
 import com.hamid.clothing.core.Category
 import com.hamid.clothing.core.CheckoutService
 import com.hamid.clothing.core.Cheque
@@ -46,13 +49,28 @@ import java.util.UUID
 
 data class OrderCreation(val errors: List<String>, val order: Order?)
 
+enum class ThemeMode { DARK, LIGHT, SYSTEM }
+
+data class PublishResult(val file: File, val products: Int, val images: Int, val bytes: Long)
+
 /**
  * Single source of truth for the admin app. Data is local and encrypted; the same API will later
  * be backed by a server. Every change is written to disk immediately.
  */
 class AdminStore(context: Context) {
-    private val storage = SecureFile(File(context.filesDir, "admin-data.bin"))
+    private val appContext: Context = context.applicationContext
+    private val storage = SecureFile(File(appContext.filesDir, "admin-data.bin"))
     private val inventory = InventoryLedger()
+    private val prefs = appContext.getSharedPreferences("admin_prefs", Context.MODE_PRIVATE)
+
+    /** Product photos. */
+    val images = ImageStore(appContext)
+
+    var themeMode by mutableStateOf(readThemeMode())
+        private set
+
+    var lastPublishedAt by mutableStateOf(prefs.getLong("catalog_published_at", 0L))
+        private set
 
     var snapshot by mutableStateOf(StoreSnapshot())
         private set
@@ -220,7 +238,9 @@ class AdminStore(context: Context) {
         if (orders.any { o -> o.items.any { it.productId == id } }) {
             return "این کالا در سفارش‌ها استفاده شده است و حذف نمی‌شود. می‌توانید آن را غیرفعال کنید."
         }
+        val removed = products.firstOrNull { it.id == id }
         update { it.copy(products = it.products.filter { p -> p.id != id }) }
+        removed?.imageUris?.forEach { images.delete(it) }
         rebuildInventory()
         return null
     }
@@ -485,6 +505,42 @@ class AdminStore(context: Context) {
         update { it.copy(bankAccounts = it.bankAccounts.filter { b -> b.id != id }) }
     }
 
+    // ---------- appearance ----------
+
+    private fun readThemeMode(): ThemeMode {
+        val saved = prefs.getString("theme_mode", null)
+        return ThemeMode.values().firstOrNull { it.name == saved } ?: ThemeMode.DARK
+    }
+
+    fun updateTheme(mode: ThemeMode) {
+        themeMode = mode
+        prefs.edit().putString("theme_mode", mode.name).apply()
+    }
+
+    // ---------- publishing the catalogue ----------
+
+    /**
+     * Builds catalog-<date>.zip (products without costs, photos, shop details) in the cache folder.
+     * Reads photos from disk, so call it off the main thread.
+     */
+    fun buildCatalogFile(): PublishResult {
+        val publishedAt = now()
+        val data = CatalogBuilder.fromSnapshot(snapshot, publishedAt)
+        val dir = File(appContext.cacheDir, "catalog")
+        dir.mkdirs()
+        dir.listFiles()?.forEach { it.delete() }
+        val d = JalaliCalendar.fromEpochMillis(publishedAt)
+        val name = "catalog-" + d.year + "-" + d.month.toString().padStart(2, '0') + "-" + d.day.toString().padStart(2, '0') + ".zip"
+        val file = File(dir, name)
+        var storedImages = 0
+        file.outputStream().buffered().use { out ->
+            storedImages = CatalogPackage.write(out, data) { imageName -> images.read(imageName) }
+        }
+        prefs.edit().putLong("catalog_published_at", publishedAt).apply()
+        lastPublishedAt = publishedAt
+        return PublishResult(file, data.products.size, storedImages, file.length())
+    }
+
     // ---------- settings / bulk ----------
 
     fun saveSettings(settings: StoreSettings) {
@@ -495,11 +551,13 @@ class AdminStore(context: Context) {
     /** Removes business data. Categories and settings are kept. */
     fun clearAllData() {
         update { StoreSnapshot(sample = false, categories = it.categories, settings = it.settings) }
+        images.deleteAll()
         rebuildInventory()
     }
 
     fun loadSampleData() {
         update { SampleData.snapshot(now()) }
+        images.deleteAll()
         rebuildInventory()
     }
 }

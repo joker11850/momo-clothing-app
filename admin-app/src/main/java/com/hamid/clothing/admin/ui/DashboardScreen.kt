@@ -38,7 +38,8 @@ fun DashboardScreen(
     onOpenOrders: (OrderFilter) -> Unit,
     onOpenCheques: () -> Unit,
     onOpenReports: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenPublish: () -> Unit
 ) {
     val now = System.currentTimeMillis()
     val (dayStart, dayEnd) = Periods.day(now)
@@ -164,6 +165,17 @@ fun DashboardScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 StatCard("مشتریان", faInt(stats.customerCount), Modifier.weight(1f))
                 StatCard("چک‌های دریافتی باز", formatToman(receivedOpen), Modifier.weight(1f))
+            }
+        }
+
+        item {
+            AdminCard(onClick = onOpenPublish) {
+                Text("انتشار کاتالوگ برای مشتریان", fontWeight = FontWeight.Bold, color = Gold)
+                Text(
+                    if (store.lastPublishedAt > 0) "آخرین انتشار: ${faDate(store.lastPublishedAt)}" else "هنوز کاتالوگی منتشر نشده است",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Muted
+                )
             }
         }
 

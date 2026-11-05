@@ -2,6 +2,24 @@
 
 package com.hamid.clothing.admin.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -69,6 +87,32 @@ fun ProductFormScreen(
         if (list.isEmpty()) list.add(VariantDraft("", "", "0"))
         list
     }
+    val images = remember(productId) { mutableStateListOf<String>().also { it.addAll(existing?.imageUris ?: emptyList()) } }
+    val addedImages = remember(productId) { mutableListOf<String>() }
+    val savedFlag = remember(productId) { booleanArrayOf(false) }
+    var importing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    // photos picked but not saved with the product are removed again when the form closes
+    DisposableEffect(productId) {
+        onDispose { if (!savedFlag[0]) addedImages.forEach { store.images.delete(it) } }
+    }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(8)) { uris ->
+        if (uris.isNotEmpty()) {
+            importing = true
+            scope.launch {
+                val names = withContext(Dispatchers.IO) { uris.mapNotNull { store.images.import(it) } }
+                val room = (8 - images.size).coerceAtLeast(0)
+                for (name in names.take(room)) {
+                    images.add(name)
+                    addedImages.add(name)
+                }
+                names.drop(room).forEach { store.images.delete(it) }
+                importing = false
+                if (names.size < uris.size) toast(context, "بعضی عکس‌ها خوانده نشدند")
+                if (names.size > room) toast(context, "حداکثر ۸ عکس برای هر کالا")
+            }
+        }
+    }
     var errors by remember(productId) { mutableStateOf<List<String>>(emptyList()) }
     var newCategoryDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -87,13 +131,19 @@ fun ProductFormScreen(
             wholesalePrice = parseMoney(wholesaleText),
             variants = variants.map { Variant(it.color.trim(), it.size.trim(), parseInt(it.stock)) },
             description = description.trim(),
-            imageUris = existing?.imageUris ?: emptyList(),
+            imageUris = images.toList(),
             barcode = barcode.trim().ifBlank { null },
             lowStockThreshold = parseInt(thresholdText, 3),
             active = active
         )
         val result = store.saveProduct(product)
-        if (result.isEmpty()) onDone() else errors = result
+        if (result.isEmpty()) {
+            savedFlag[0] = true
+            (existing?.imageUris ?: emptyList()).filter { it !in images }.forEach { store.images.delete(it) }
+            onDone()
+        } else {
+            errors = result
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -117,6 +167,54 @@ fun ProductFormScreen(
             AdminTextField("کد اختصاصی کالا", code, { code = it })
             AdminTextField("بارکد (اختیاری)", barcode, { barcode = it }, keyboardType = KeyboardType.Number)
             AdminTextField("توضیحات", description, { description = it }, singleLine = false)
+
+            SectionLabel("عکس‌های کالا")
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(images.toList(), key = { it }) { name ->
+                    Box(
+                        modifier = Modifier
+                            .size(104.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(
+                                if (images.firstOrNull() == name) 2.dp else 1.dp,
+                                if (images.firstOrNull() == name) Gold else OutlineDark,
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable {
+                                images.remove(name)
+                                images.add(0, name)
+                            }
+                    ) {
+                        LocalImage(store.images.file(name), Modifier.size(104.dp), maxPx = 300)
+                        IconButton(
+                            onClick = { images.remove(name) },
+                            modifier = Modifier.align(Alignment.TopEnd).size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = "حذف عکس", tint = Danger)
+                        }
+                        if (images.firstOrNull() == name) {
+                            Text(
+                                "اصلی",
+                                color = Gold,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.align(Alignment.BottomStart).background(SurfaceDark).padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            OutlinedButton(
+                onClick = {
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                },
+                enabled = !importing && images.size < 8,
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (importing) "در حال آماده‌سازی عکس‌ها…" else "+ افزودن عکس (${faInt(images.size)} از ۸)") }
+            Text(
+                "عکس‌ها کوچک و فشرده می‌شوند. اولین عکس، عکس اصلی کالاست؛ برای اصلی‌کردن هر عکس روی آن بزنید.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Muted
+            )
 
             SectionLabel("دسته‌بندی")
             Row(
@@ -171,7 +269,7 @@ fun ProductFormScreen(
             }
 
             Text(
-                "ثبت تصویر کالا و اسکن بارکد با دوربین در مرحله‌ی بعد اضافه می‌شود.",
+                "اسکن بارکد با دوربین در مرحله‌ی بعد اضافه می‌شود.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Muted
             )

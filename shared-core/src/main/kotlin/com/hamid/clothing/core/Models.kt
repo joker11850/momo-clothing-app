@@ -79,5 +79,15 @@ data class StoreSettings(
     /** How long stock stays reserved for an unpaid retail order. */
     val retailHoldHours: Int = 24,
     /** 0 = wholesale reservations never expire on their own. */
-    val wholesaleHoldHours: Int = 0
+    val wholesaleHoldHours: Int = 0,
+    // contact channels shown to customers; usernames without @, WhatsApp number like 989121234567
+    val whatsapp: String = "",
+    val telegram: String = "",
+    val instagram: String = "",
+    val rubika: String = "",
+    val eitaa: String = "",
+    val bale: String = "",
+    // shipping costs in Toman; 0 = announced by the shop after the order
+    val courierCost: Long = 0L,
+    val postCost: Long = 0L
 )

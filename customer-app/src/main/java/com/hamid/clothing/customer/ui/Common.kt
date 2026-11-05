@@ -2,6 +2,10 @@
 
 package com.hamid.clothing.customer.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -108,9 +112,19 @@ private val Palettes = listOf(
     listOf(Color(0xFFD3DDEB), Color(0xFF9DB1CE))
 )
 
-/** Product photo if p_<code> exists in drawables, otherwise a soft gradient with an icon. */
+/** Photo from the imported catalogue, then p_<code> in drawables, then a soft gradient with an icon. */
 @Composable
-fun ProductArt(code: String, seed: String, modifier: Modifier = Modifier) {
+fun ProductArt(store: CustomerStore, product: Product, modifier: Modifier = Modifier, maxPx: Int = 500) {
+    val photo = store.coverFile(product)
+    if (photo != null) {
+        LocalImage(photo, modifier, maxPx) { ArtPlaceholder(product.code, product.id, Modifier.fillMaxSize()) }
+    } else {
+        ArtPlaceholder(product.code, product.id, modifier)
+    }
+}
+
+@Composable
+private fun ArtPlaceholder(code: String, seed: String, modifier: Modifier = Modifier) {
     val id = drawableId("p_" + code.lowercase().replace(Regex("[^a-z0-9]"), "_"))
     if (id != null) {
         Image(painter = painterResource(id), contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
@@ -120,6 +134,22 @@ fun ProductArt(code: String, seed: String, modifier: Modifier = Modifier) {
             Icon(Icons.Default.Checkroom, contentDescription = null, tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.size(56.dp))
         }
     }
+}
+
+/** Opens the file picker and imports the chosen catalog zip. Returns the function that starts it. */
+@Composable
+fun rememberCatalogImporter(store: CustomerStore): () -> Unit {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val result = store.importCatalog(uri)
+                if (!result.ok) toast(context, result.message)
+            }
+        }
+    }
+    return { picker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }
 }
 
 @Composable
@@ -302,7 +332,7 @@ fun ProductCard(
     val favorite = store.isFavorite(product.id)
     SoftCard(modifier = modifier, onClick = onClick) {
         Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-            ProductArt(product.code, product.id, Modifier.fillMaxWidth().height(180.dp))
+            ProductArt(store, product, Modifier.fillMaxWidth().height(180.dp))
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.92f),

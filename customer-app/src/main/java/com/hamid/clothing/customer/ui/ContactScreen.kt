@@ -20,21 +20,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.hamid.clothing.customer.StoreConfig
+import com.hamid.clothing.customer.CustomerStore
 
 private data class Channel(val title: String, val handle: String, val url: String)
 
 @Composable
-fun ContactScreen(nav: Nav, padding: PaddingValues) {
+fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
+    val info = store.info
     val channels = listOf(
-        Channel("تماس تلفنی", StoreConfig.PHONE_NUMBER, "tel:" + StoreConfig.PHONE_NUMBER),
-        Channel("واتساپ", StoreConfig.WHATSAPP_NUMBER, "https://wa.me/" + StoreConfig.WHATSAPP_NUMBER),
-        Channel("تلگرام", StoreConfig.TELEGRAM_USER, "https://t.me/" + StoreConfig.TELEGRAM_USER),
-        Channel("اینستاگرام", StoreConfig.INSTAGRAM_USER, "https://instagram.com/" + StoreConfig.INSTAGRAM_USER),
-        Channel("روبیکا", StoreConfig.ROBIKA_USER, "https://rubika.ir/" + StoreConfig.ROBIKA_USER),
-        Channel("ایتا", StoreConfig.EITAA_USER, "https://eitaa.com/" + StoreConfig.EITAA_USER),
-        Channel("بله", StoreConfig.BALE_USER, "https://ble.ir/" + StoreConfig.BALE_USER)
+        Channel("تماس تلفنی", info.phone, "tel:" + info.phone),
+        Channel("واتساپ", info.whatsapp, "https://wa.me/" + info.whatsapp),
+        Channel("تلگرام", info.telegram, "https://t.me/" + info.telegram),
+        Channel("اینستاگرام", info.instagram, "https://instagram.com/" + info.instagram),
+        Channel("روبیکا", info.rubika, "https://rubika.ir/" + info.rubika),
+        Channel("ایتا", info.eitaa, "https://eitaa.com/" + info.eitaa),
+        Channel("بله", info.bale, "https://ble.ir/" + info.bale)
     )
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenTitle("تماس با ما")

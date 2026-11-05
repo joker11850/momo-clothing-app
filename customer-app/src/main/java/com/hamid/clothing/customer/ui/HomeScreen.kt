@@ -64,7 +64,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.hamid.clothing.customer.CustomerStore
-import com.hamid.clothing.customer.StoreConfig
 import kotlinx.coroutines.delay
 
 private data class Slide(val title: String, val subtitle: String, val cta: String, val target: Screen, val colors: List<Color>, val image: String)
@@ -72,6 +71,7 @@ private data class Slide(val title: String, val subtitle: String, val cta: Strin
 @Composable
 fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
+    val importCatalog = rememberCatalogImporter(store)
     val specials = store.products.filter { store.quoteFor(it).discountPercent > 0 }
     val newest = store.products.reversed().take(8)
 
@@ -80,7 +80,19 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        item { HomeHeader(store, nav) }
+        item { HomeHeader(store, nav, importCatalog) }
+
+        if (store.isDemoCatalog) {
+            item {
+                SoftCard(color = Beige) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("کاتالوگ فعلی نمونه است", fontWeight = FontWeight.ExtraBold, color = GoldInk)
+                        Text("فایل کاتالوگ فروشگاه را از فروشنده بگیرید و دریافت کنید تا کالاها و عکس‌های واقعی نمایش داده شود.", style = MaterialTheme.typography.bodySmall, color = GoldInk)
+                        GoldButton("دریافت کاتالوگ فروشگاه", onClick = importCatalog, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            }
+        }
 
         item {
             SoftCard(color = RoseLight.copy(alpha = 0.55f), onClick = { nav.tab(Screen.Shop()) }) {
@@ -189,28 +201,28 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         item {
             PromoBanner(
                 "بنر اینستاگرام", "صفحه‌ی اینستاگرام ما", "هر روز استایل‌ها و مدل‌های تازه",
-                if (StoreConfig.INSTAGRAM_USER.isEmpty()) "به‌زودی" else "@" + StoreConfig.INSTAGRAM_USER,
+                if (store.info.instagram.isEmpty()) "به‌زودی" else "@" + store.info.instagram,
                 listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63))
             ) {
-                if (StoreConfig.INSTAGRAM_USER.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
-                else openUrl(context, "https://instagram.com/" + StoreConfig.INSTAGRAM_USER)
+                if (store.info.instagram.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
+                else openUrl(context, "https://instagram.com/" + store.info.instagram)
             }
         }
         item {
             PromoBanner(
                 "بنر تلگرام", "کانال تلگرام ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
-                if (StoreConfig.TELEGRAM_USER.isEmpty()) "به‌زودی" else "t.me/" + StoreConfig.TELEGRAM_USER,
+                if (store.info.telegram.isEmpty()) "به‌زودی" else "t.me/" + store.info.telegram,
                 listOf(Color(0xFF123A6B), Color(0xFF1F5FA8))
             ) {
-                if (StoreConfig.TELEGRAM_USER.isEmpty()) toast(context, "لینک تلگرام هنوز تنظیم نشده است")
-                else openUrl(context, "https://t.me/" + StoreConfig.TELEGRAM_USER)
+                if (store.info.telegram.isEmpty()) toast(context, "لینک تلگرام هنوز تنظیم نشده است")
+                else openUrl(context, "https://t.me/" + store.info.telegram)
             }
         }
     }
 }
 
 @Composable
-private fun HomeHeader(store: CustomerStore, nav: Nav) {
+private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box {
@@ -228,6 +240,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav) {
                     if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
                 })
                 DropdownMenuItem(text = { Text("تماس با ما") }, onClick = { menuOpen = false; nav.tab(Screen.Contact) })
+                DropdownMenuItem(text = { Text("دریافت کاتالوگ فروشگاه") }, onClick = { menuOpen = false; onImport() })
             }
         }
         Row(
@@ -237,12 +250,12 @@ private fun HomeHeader(store: CustomerStore, nav: Nav) {
         ) {
             Surface(shape = CircleShape, color = Burgundy, modifier = Modifier.size(46.dp)) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(StoreConfig.BRAND_LETTER, color = Gold, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
+                    Text(store.info.brandLetter, color = Gold, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
                 }
             }
             Column(modifier = Modifier.padding(start = 10.dp)) {
-                Text(StoreConfig.STORE_NAME, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = Burgundy)
-                Text(StoreConfig.TAGLINE, style = MaterialTheme.typography.labelSmall, color = Muted)
+                Text(store.info.name, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = Burgundy)
+                Text(store.info.tagline, style = MaterialTheme.typography.labelSmall, color = Muted)
             }
         }
         Surface(onClick = { nav.tab(Screen.Cart) }, shape = RoundedCornerShape(18.dp), color = RoseLight.copy(alpha = 0.7f), modifier = Modifier.size(48.dp)) {

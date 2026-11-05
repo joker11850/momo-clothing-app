@@ -16,3 +16,16 @@ fun shareText(context: Context, text: String) {
         toast(context, "اشتراک‌گذاری ممکن نشد")
     }
 }
+
+fun shareFile(context: Context, file: java.io.File, mime: String = "application/zip", title: String = "ارسال") {
+    try {
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(mime)
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        toast(context, "ارسال فایل ممکن نشد")
+    }
+}

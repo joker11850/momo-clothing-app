@@ -72,6 +72,8 @@ private fun MenuRow(title: String, subtitle: String? = null, onClick: () -> Unit
 fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     var confirmLogout by remember { mutableStateOf(false) }
     val customer = store.customer
+    val importCatalog = rememberCatalogImporter(store)
+    val catalogText = if (store.isDemoCatalog) "نمونه — برای دریافت کاتالوگ فروشگاه بزنید" else "آخرین به‌روزرسانی: ${faDate(store.catalogDate)}"
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenTitle("حساب من")
@@ -86,6 +88,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 }
                 MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
                 MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
+                MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
             }
             return@Column
         }
@@ -134,6 +137,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             MenuRow("مشخصات و آدرس‌ها") { nav.go(Screen.Profile) }
             MenuRow("عضویت عمده", customer.wholesaleStatus.fa()) { nav.go(Screen.Wholesale) }
             MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
+            MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
             OutlinedButton(onClick = { confirmLogout = true }, modifier = Modifier.fillMaxWidth()) { Text("خروج از حساب", color = Danger) }
             Box(modifier = Modifier.height(24.dp))
         }
@@ -362,7 +366,7 @@ fun OrderDetailScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, or
 
             GoldButton(
                 "ارسال سفارش برای فروشگاه",
-                onClick = { shareText(context, InvoiceText.build(order, store.customer?.fullName ?: order.receiverName, StoreConfig.STORE_NAME)) },
+                onClick = { shareText(context, InvoiceText.build(order, store.customer?.fullName ?: order.receiverName, store.info.name)) },
                 modifier = Modifier.fillMaxWidth()
             )
             if (order.paymentMethod == PaymentMethod.CARD_TO_CARD && order.status == OrderStatus.AWAITING_PAYMENT) {
@@ -463,10 +467,10 @@ fun WholesaleScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 }
 
 @Composable
-fun BankInfoScreen(nav: Nav, padding: PaddingValues) {
+fun BankInfoScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
-    val accounts = StoreConfig.BANK_ACCOUNTS.filter { it.active }
+    val accounts = store.bankAccounts.filter { it.active }
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenTitle("حساب‌های فروشگاه", onBack = { nav.back() })
         Column(

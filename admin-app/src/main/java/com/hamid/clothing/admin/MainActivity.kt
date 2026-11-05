@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         val store = AdminStore(applicationContext)
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                AdminTheme {
+                AdminTheme(store.themeMode) {
                     AdminApp(store)
                 }
             }

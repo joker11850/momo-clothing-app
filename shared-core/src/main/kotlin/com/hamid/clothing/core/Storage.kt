@@ -59,6 +59,60 @@ object DataCodec {
         )
     }
 
+    // ---------- published catalog (what customers receive) ----------
+
+    fun encodeCatalog(c: CatalogData): String {
+        val root = JSONObject()
+        root.put("version", VERSION)
+        root.put("kind", "catalog")
+        root.put("publishedAt", c.publishedAt)
+        val st = JSONObject()
+        st.put("shopName", c.store.shopName)
+        st.put("phone", c.store.phone)
+        st.put("address", c.store.address)
+        st.put("whatsapp", c.store.whatsapp)
+        st.put("telegram", c.store.telegram)
+        st.put("instagram", c.store.instagram)
+        st.put("rubika", c.store.rubika)
+        st.put("eitaa", c.store.eitaa)
+        st.put("bale", c.store.bale)
+        st.put("courierCost", c.store.courierCost)
+        st.put("postCost", c.store.postCost)
+        root.put("store", st)
+        root.put("categories", jsonArray(c.categories) { category(it) })
+        root.put("products", jsonArray(c.products) { catalogProduct(it) })
+        root.put("discounts", jsonArray(c.discounts) { discount(it) })
+        root.put("bankAccounts", jsonArray(c.bankAccounts) { bank(it) })
+        return root.toString()
+    }
+
+    fun decodeCatalog(text: String): CatalogData {
+        val root = JSONObject(text)
+        require(root.optInt("version", 0) == VERSION) { "unsupported catalog version" }
+        require(root.optString("kind", "") == "catalog") { "not a catalog file" }
+        val st = root.optJSONObject("store") ?: JSONObject()
+        return CatalogData(
+            publishedAt = root.optLong("publishedAt", 0L),
+            store = CatalogStoreInfo(
+                shopName = st.optString("shopName", ""),
+                phone = st.optString("phone", ""),
+                address = st.optString("address", ""),
+                whatsapp = st.optString("whatsapp", ""),
+                telegram = st.optString("telegram", ""),
+                instagram = st.optString("instagram", ""),
+                rubika = st.optString("rubika", ""),
+                eitaa = st.optString("eitaa", ""),
+                bale = st.optString("bale", ""),
+                courierCost = st.optLong("courierCost", 0L),
+                postCost = st.optLong("postCost", 0L)
+            ),
+            categories = root.optJSONArray("categories").objects { readCategory(it) },
+            products = root.optJSONArray("products").objects { readCatalogProduct(it) },
+            discounts = root.optJSONArray("discounts").objects { readDiscount(it) },
+            bankAccounts = root.optJSONArray("bankAccounts").objects { readBank(it) }
+        )
+    }
+
     // ---------- customer app data ----------
 
     fun encodeCustomerApp(d: CustomerAppData): String {
@@ -433,6 +487,14 @@ object DataCodec {
         o.put("address", s.address)
         o.put("retailHoldHours", s.retailHoldHours)
         o.put("wholesaleHoldHours", s.wholesaleHoldHours)
+        o.put("whatsapp", s.whatsapp)
+        o.put("telegram", s.telegram)
+        o.put("instagram", s.instagram)
+        o.put("rubika", s.rubika)
+        o.put("eitaa", s.eitaa)
+        o.put("bale", s.bale)
+        o.put("courierCost", s.courierCost)
+        o.put("postCost", s.postCost)
         return o
     }
 
@@ -441,6 +503,82 @@ object DataCodec {
         phone = o.optString("phone", ""),
         address = o.optString("address", ""),
         retailHoldHours = o.optInt("retailHoldHours", 24),
-        wholesaleHoldHours = o.optInt("wholesaleHoldHours", 0)
+        wholesaleHoldHours = o.optInt("wholesaleHoldHours", 0),
+        whatsapp = o.optString("whatsapp", ""),
+        telegram = o.optString("telegram", ""),
+        instagram = o.optString("instagram", ""),
+        rubika = o.optString("rubika", ""),
+        eitaa = o.optString("eitaa", ""),
+        bale = o.optString("bale", ""),
+        courierCost = o.optLong("courierCost", 0L),
+        postCost = o.optLong("postCost", 0L)
+    )
+
+    // ---------- catalog product and discount ----------
+
+    /** Customer-facing product: no purchase or landed cost is ever written. */
+    private fun catalogProduct(p: Product): JSONObject {
+        val o = JSONObject()
+        o.put("id", p.id)
+        o.put("code", p.code)
+        o.put("name", p.name)
+        o.put("categoryId", p.categoryId)
+        o.put("description", p.description)
+        o.put("retailPrice", p.retailPrice)
+        o.put("wholesalePrice", p.wholesalePrice)
+        if (p.barcode != null) o.put("barcode", p.barcode)
+        o.put("lowStockThreshold", p.lowStockThreshold)
+        o.put("images", strings(p.imageUris))
+        o.put("variants", jsonArray(p.variants) { v ->
+            val j = JSONObject()
+            j.put("color", v.color)
+            j.put("size", v.size)
+            j.put("stock", v.stock)
+            j
+        })
+        return o
+    }
+
+    private fun readCatalogProduct(o: JSONObject) = Product(
+        id = o.getString("id"),
+        code = o.getString("code"),
+        name = o.getString("name"),
+        categoryId = o.getString("categoryId"),
+        purchasePrice = 0L,
+        landedCost = 0L,
+        retailPrice = o.optLong("retailPrice", 0L),
+        wholesalePrice = o.optLong("wholesalePrice", 0L),
+        variants = o.optJSONArray("variants").objects { Variant(it.getString("color"), it.getString("size"), it.optInt("stock", 0)) },
+        description = o.optString("description", ""),
+        imageUris = o.optJSONArray("images").strings(),
+        barcode = o.nullableString("barcode"),
+        lowStockThreshold = o.optInt("lowStockThreshold", 3),
+        active = true
+    )
+
+    private fun discount(d: Discount): JSONObject {
+        val o = JSONObject()
+        o.put("id", d.id)
+        o.put("title", d.title)
+        o.put("percent", d.percent)
+        o.put("scope", d.scope.name)
+        o.put("targetIds", strings(d.targetIds))
+        if (d.code != null) o.put("code", d.code)
+        o.put("startsAt", d.startsAt)
+        o.put("endsAt", d.endsAt)
+        o.put("active", d.active)
+        return o
+    }
+
+    private fun readDiscount(o: JSONObject) = Discount(
+        id = o.getString("id"),
+        title = o.optString("title", ""),
+        percent = o.getInt("percent"),
+        scope = enumOf(o.optString("scope", ""), DiscountScope.ALL),
+        targetIds = o.optJSONArray("targetIds").strings().toSet(),
+        code = o.nullableString("code"),
+        startsAt = o.optLong("startsAt", 0L),
+        endsAt = o.optLong("endsAt", Long.MAX_VALUE),
+        active = o.optBoolean("active", true)
     )
 }

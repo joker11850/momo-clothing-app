@@ -1,8 +1,12 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 package com.hamid.clothing.customer.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -164,7 +168,7 @@ fun ProductScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, produc
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(340.dp)) {
-            ProductArt(product.code, product.id, Modifier.fillMaxSize())
+            ProductGallery(store, product)
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.92f),
@@ -273,6 +277,34 @@ fun ProductScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, produc
                 )
             }
             Box(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun ProductGallery(store: CustomerStore, product: com.hamid.clothing.core.Product) {
+    val files = store.imageFiles(product)
+    if (files.size <= 1) {
+        ProductArt(store, product, Modifier.fillMaxSize(), maxPx = 900)
+        return
+    }
+    val pager = rememberPagerState(pageCount = { files.size })
+    Box(modifier = Modifier.fillMaxSize()) {
+        HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
+            LocalImage(files[page], Modifier.fillMaxSize(), maxPx = 900)
+        }
+        Row(
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            for (i in files.indices) {
+                Box(
+                    modifier = Modifier
+                        .size(if (pager.currentPage == i) 10.dp else 7.dp)
+                        .clip(CircleShape)
+                        .background(if (pager.currentPage == i) Gold else Color.White.copy(alpha = 0.7f))
+                )
+            }
         }
     }
 }

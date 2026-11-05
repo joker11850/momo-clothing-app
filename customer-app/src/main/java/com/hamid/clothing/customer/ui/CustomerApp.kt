@@ -94,11 +94,19 @@ fun CustomerApp(store: CustomerStore) {
             is Screen.OrderDetail -> OrderDetailScreen(store, nav, padding, current.id)
             Screen.Wholesale -> WholesaleScreen(store, nav, padding)
             Screen.Favorites -> FavoritesScreen(store, nav, padding)
-            Screen.BankInfo -> BankInfoScreen(nav, padding)
-            Screen.Contact -> ContactScreen(nav, padding)
+            Screen.BankInfo -> BankInfoScreen(store, nav, padding)
+            Screen.Contact -> ContactScreen(store, nav, padding)
         }
     }
 
+    if (store.importing) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {},
+            title = { Text("دریافت کاتالوگ") },
+            text = { Text("در حال دریافت کالاها و عکس‌ها…") },
+            confirmButton = {}
+        )
+    }
     val message = store.notice
     if (message != null) InfoDialog("توجه", message) { store.dismissNotice() }
 }

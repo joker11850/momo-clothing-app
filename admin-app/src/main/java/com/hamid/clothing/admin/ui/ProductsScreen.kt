@@ -2,6 +2,10 @@
 
 package com.hamid.clothing.admin.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +48,8 @@ fun ProductsScreen(
     padding: PaddingValues,
     initialLowStock: Boolean,
     onAdd: () -> Unit,
-    onEdit: (String) -> Unit
+    onEdit: (String) -> Unit,
+    onPublish: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
     var categoryId by remember { mutableStateOf<String?>(null) }
@@ -52,7 +58,10 @@ fun ProductsScreen(
 
     Box(modifier = Modifier.fillMaxSize().padding(padding)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ScreenHeader("کالاها")
+            ScreenHeader(
+                "کالاها",
+                actions = { TextButton(onClick = onPublish) { Text("انتشار برای مشتریان") } }
+            )
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
@@ -112,26 +121,39 @@ fun ProductsScreen(
 private fun ProductRow(store: AdminStore, p: Product, onClick: () -> Unit) {
     val category = store.categories.firstOrNull { it.id == p.categoryId }?.name ?: "بدون دسته"
     val low = p.lowStockVariants
+    val cover = p.imageUris.firstOrNull()?.let { store.images.file(it) }
     AdminCard(onClick = onClick) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(p.name, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            if (low.isNotEmpty()) {
-                Icon(Icons.Default.Warning, contentDescription = "کمبود موجودی", tint = Danger)
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            LocalImage(
+                cover,
+                Modifier.size(76.dp).clip(RoundedCornerShape(12.dp)).background(SurfaceHigh),
+                maxPx = 240
+            ) {
+                Box(modifier = Modifier.size(76.dp), contentAlignment = Alignment.Center) {
+                    Text(if (p.imageUris.isEmpty()) "بدون عکس" else "…", color = Muted, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(p.name, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    if (!p.active) Text("پنهان", color = Muted, style = MaterialTheme.typography.labelSmall)
+                    if (low.isNotEmpty()) {
+                        Icon(Icons.Default.Warning, contentDescription = "کمبود موجودی", tint = Danger)
+                    }
+                }
+                Text("${p.code} · $category", style = MaterialTheme.typography.bodySmall, color = Muted)
+                Row(modifier = Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text("خرده: ${formatToman(p.retailPrice)}", style = MaterialTheme.typography.bodySmall)
+                    if (p.wholesalePrice > 0) {
+                        Text("عمده: ${formatToman(p.wholesalePrice)}", style = MaterialTheme.typography.bodySmall, color = Gold)
+                    }
+                }
+                Text(
+                    "موجودی: ${faInt(p.totalStock)} عدد" + if (low.isNotEmpty()) " · ${faInt(low.size)} مورد کم‌موجودی" else "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (low.isNotEmpty()) Danger else Muted
+                )
             }
         }
-        Text("${p.code} · $category", style = MaterialTheme.typography.bodySmall, color = Muted)
-        Row(modifier = Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("خرده: ${formatToman(p.retailPrice)}", style = MaterialTheme.typography.bodySmall)
-            if (p.wholesalePrice > 0) {
-                Text("عمده: ${formatToman(p.wholesalePrice)}", style = MaterialTheme.typography.bodySmall, color = Gold)
-            }
-        }
-        Text(
-            "موجودی: ${faInt(p.totalStock)} عدد در ${faInt(p.variants.size)} رنگ/سایز" +
-                if (low.isNotEmpty()) " · ${faInt(low.size)} مورد کم‌موجودی" else "",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (low.isNotEmpty()) Danger else Muted,
-            modifier = Modifier.padding(top = 2.dp)
-        )
     }
 }

@@ -185,7 +185,7 @@ fun ErrorBox(errors: List<String>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF3A1F1F))
+        colors = CardDefaults.cardColors(containerColor = ErrorBg)
     ) {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (e in errors) Text("• $e", color = Danger, style = MaterialTheme.typography.bodyMedium)

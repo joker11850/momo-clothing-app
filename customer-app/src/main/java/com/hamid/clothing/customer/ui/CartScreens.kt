@@ -69,7 +69,7 @@ fun CartScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             for (line in priced.lines) {
                 SoftCard {
                     Row(modifier = Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        ProductArt(line.product.code, line.product.id, Modifier.size(84.dp).clip(RoundedCornerShape(16.dp)))
+                        ProductArt(store, line.product, Modifier.size(84.dp).clip(RoundedCornerShape(16.dp)), maxPx = 240)
                         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(line.product.name, fontWeight = FontWeight.Bold, maxLines = 2)
                             Text("${line.line.color} / ${line.line.size}", style = MaterialTheme.typography.bodySmall, color = Muted)
@@ -160,7 +160,7 @@ fun CheckoutScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     var payment by remember { mutableStateOf(PaymentMethod.CARD_TO_CARD) }
     var errors by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    val shippingCost = StoreConfig.shippingCost(shipping)
+    val shippingCost = store.shippingCost(shipping)
     val total = priced.subtotal + shippingCost
     val allowed = store.allowedPayments(total)
 
@@ -287,7 +287,7 @@ fun OrderDoneScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, orde
 
         GoldButton(
             "ارسال سفارش برای فروشگاه",
-            onClick = { shareText(context, InvoiceText.build(order, store.customer?.fullName ?: order.receiverName, StoreConfig.STORE_NAME)) },
+            onClick = { shareText(context, InvoiceText.build(order, store.customer?.fullName ?: order.receiverName, store.info.name)) },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedButton(onClick = { nav.replace(Screen.OrderDetail(order.id)) }, modifier = Modifier.fillMaxWidth()) { Text("مشاهده‌ی سفارش و فاکتور") }

@@ -1,10 +1,14 @@
 package com.hamid.clothing.customer
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.hamid.clothing.core.BankAccount
 import com.hamid.clothing.core.CartLine
+import com.hamid.clothing.core.CatalogData
+import com.hamid.clothing.core.CatalogPackage
 import com.hamid.clothing.core.CartMath
 import com.hamid.clothing.core.CartPricing
 import com.hamid.clothing.core.Category
@@ -33,19 +37,42 @@ import com.hamid.clothing.core.Validators
 import com.hamid.clothing.core.WholesaleRequest
 import com.hamid.clothing.core.WholesaleStatus
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class PlaceResult(val errors: List<String>, val order: Order?)
+
+data class ImportResult(val ok: Boolean, val message: String)
 
 /**
  * State of the customer app. The catalogue is the built-in demo catalogue and orders stay on this
  * phone until a server exists; the same API will later be backed by the server.
  */
 class CustomerStore(context: Context) {
-    private val storage = SecureFile(File(context.filesDir, "customer-data.bin"))
+    private val storage = SecureFile(File(context.applicationContext.filesDir, "customer-data.bin"))
 
-    val categories: List<Category> = SampleData.categories()
-    val products: List<Product> = SampleData.products().filter { it.active }
-    val discounts: List<Discount> = SampleData.discounts()
+    private val appContext: Context = context.applicationContext
+    private val catalogDir = File(appContext.filesDir, "catalog")
+
+    // built-in demo catalogue until the shop's catalogue file is imported
+    var categories: List<Category> by mutableStateOf(SampleData.categories())
+        private set
+    var products: List<Product> by mutableStateOf(SampleData.products().filter { it.active })
+        private set
+    var discounts: List<Discount> by mutableStateOf(SampleData.discounts())
+        private set
+    var bankAccounts: List<BankAccount> by mutableStateOf(StoreConfig.BANK_ACCOUNTS)
+        private set
+    var info: StoreInfo by mutableStateOf(StoreInfo.from(null))
+        private set
+
+    /** When the imported catalogue was published; 0 while the demo catalogue is shown. */
+    var catalogDate: Long by mutableStateOf(0L)
+        private set
+    val isDemoCatalog: Boolean get() = catalogDate == 0L
+
+    var importing: Boolean by mutableStateOf(false)
+        private set
 
     private val inventory = InventoryLedger()
     private val processor = OrderProcessor(inventory, retailHoldMillis = 24 * 3_600_000L)
@@ -99,6 +126,7 @@ class CustomerStore(context: Context) {
             }
         }
         data = decoded ?: CustomerAppData()
+        loadCatalog()
         rebuildInventory()
         expireOrders()
     }
@@ -140,6 +168,96 @@ class CustomerStore(context: Context) {
         if (after != before) update { it.copy(orders = after) }
         revision++
     }
+
+    // ---------- imported catalogue ----------
+
+    private fun applyCatalog(c: CatalogData) {
+        categories = c.categories
+        products = c.products.filter { it.active }
+        discounts = c.discounts
+        bankAccounts = c.bankAccounts
+        info = StoreInfo.from(c.store)
+        catalogDate = if (c.publishedAt > 0) c.publishedAt else 1L
+    }
+
+    private fun loadCatalog() {
+        val file = File(catalogDir, "catalog.json")
+        if (!file.isFile) return
+        try {
+            applyCatalog(DataCodec.decodeCatalog(file.readText()))
+        } catch (e: Exception) {
+            notice = "کاتالوگ ذخیره‌شده خوانده نشد؛ کاتالوگ نمونه نمایش داده می‌شود."
+        }
+    }
+
+    /** Photo of an imported product, or null for the demo catalogue. */
+    fun imageFile(name: String): File? =
+        if (CatalogPackage.isSafeImageName(name)) File(File(catalogDir, "images"), name) else null
+
+    fun coverFile(product: Product): File? = product.imageUris.firstOrNull()?.let { imageFile(it) }
+
+    fun imageFiles(product: Product): List<File> = product.imageUris.mapNotNull { imageFile(it) }.filter { it.isFile }
+
+    /**
+     * Replaces the catalogue with the one inside a catalog zip chosen by the user (or opened from a messenger).
+     * Cart lines for products that no longer exist are removed; orders stay untouched.
+     */
+    suspend fun importCatalog(uri: Uri): ImportResult {
+        importing = true
+        try {
+            val staged = withContext(Dispatchers.IO) { stage(uri) }
+            if (staged.first == null) return ImportResult(false, staged.second)
+            val catalog = staged.first ?: return ImportResult(false, staged.second)
+            applyCatalog(catalog)
+            val valid = data.cart.filter { line ->
+                products.any { p -> p.id == line.productId && p.variants.any { it.color == line.color && it.size == line.size } }
+            }
+            val removed = data.cart.size - valid.size
+            if (removed > 0) update { it.copy(cart = valid) }
+            rebuildInventory()
+            notice = "کاتالوگ فروشگاه به‌روز شد: ${PersianNumbers.digits(catalog.products.size)} کالا." +
+                if (removed > 0) " ${PersianNumbers.digits(removed)} کالای سبد خرید دیگر موجود نبود و حذف شد." else ""
+            return ImportResult(true, "ok")
+        } finally {
+            importing = false
+        }
+    }
+
+    /** Reads the zip into a temporary folder and swaps it in. Returns the catalogue or an error message. */
+    private fun stage(uri: Uri): Pair<CatalogData?, String> {
+        val tmp = File(appContext.filesDir, "catalog_new")
+        val old = File(appContext.filesDir, "catalog_old")
+        tmp.deleteRecursively()
+        File(tmp, "images").mkdirs()
+        return try {
+            val stream = appContext.contentResolver.openInputStream(uri) ?: return null to "فایل باز نشد"
+            val parsed = stream.use { input ->
+                CatalogPackage.read(input) { name, bytes -> File(File(tmp, "images"), name).writeBytes(bytes) }
+            }
+            if (parsed.products.isEmpty()) {
+                tmp.deleteRecursively()
+                return null to "کاتالوگ خالی است"
+            }
+            File(tmp, "catalog.json").writeText(DataCodec.encodeCatalog(parsed))
+            old.deleteRecursively()
+            if (catalogDir.exists() && !catalogDir.renameTo(old)) {
+                tmp.deleteRecursively()
+                return null to "جایگزینی کاتالوگ ممکن نشد"
+            }
+            if (!tmp.renameTo(catalogDir)) {
+                if (old.exists()) old.renameTo(catalogDir)
+                tmp.deleteRecursively()
+                return null to "جایگزینی کاتالوگ ممکن نشد"
+            }
+            old.deleteRecursively()
+            parsed to "ok"
+        } catch (e: Exception) {
+            tmp.deleteRecursively()
+            null to "این فایل کاتالوگ فروشگاه معتبر نیست"
+        }
+    }
+
+    fun shippingCost(method: ShippingMethod): Long = info.shippingCost(method)
 
     // ---------- catalogue ----------
 
@@ -274,7 +392,7 @@ class CustomerStore(context: Context) {
         number: String
     ) = CheckoutInput(
         orderId, number, customer, name, phone, address, shipping,
-        StoreConfig.shippingCost(shipping), payment, now()
+        info.shippingCost(shipping), payment, now()
     )
 
     fun allowedPayments(total: Long): List<PaymentMethod> {

@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hamid.clothing.admin.AdminStore
+import com.hamid.clothing.admin.ThemeMode
 import com.hamid.clothing.core.BankAccount
 import com.hamid.clothing.core.ChequeDirection
 import com.hamid.clothing.core.ChequeService
@@ -415,6 +416,14 @@ fun SettingsScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit
     var address by remember { mutableStateOf(s.address) }
     var retailHours by remember { mutableStateOf(s.retailHoldHours.toString()) }
     var wholesaleHours by remember { mutableStateOf(s.wholesaleHoldHours.toString()) }
+    var whatsapp by remember { mutableStateOf(s.whatsapp) }
+    var telegram by remember { mutableStateOf(s.telegram) }
+    var instagram by remember { mutableStateOf(s.instagram) }
+    var rubika by remember { mutableStateOf(s.rubika) }
+    var eitaa by remember { mutableStateOf(s.eitaa) }
+    var bale by remember { mutableStateOf(s.bale) }
+    var courier by remember { mutableStateOf(if (s.courierCost > 0) s.courierCost.toString() else "") }
+    var post by remember { mutableStateOf(if (s.postCost > 0) s.postCost.toString() else "") }
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenHeader("تنظیمات", onBack = onBack)
@@ -422,10 +431,29 @@ fun SettingsScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SectionLabel("مشخصات فروشگاه (روی فاکتور می‌آید)")
+            SectionLabel("ظاهر برنامه")
+            ChoiceChips(
+                options = listOf(ThemeMode.DARK to "تیره (مشکی و طلایی)", ThemeMode.LIGHT to "روشن", ThemeMode.SYSTEM to "مطابق گوشی"),
+                selected = store.themeMode,
+                onSelect = { store.updateTheme(it) }
+            )
+
+            SectionLabel("مشخصات فروشگاه (روی فاکتور و در اپ مشتری)")
             AdminTextField("نام فروشگاه", name, { name = it })
             AdminTextField("تلفن", phone, { phone = it }, keyboardType = KeyboardType.Phone)
             AdminTextField("آدرس", address, { address = it }, singleLine = false)
+
+            SectionLabel("راه‌های ارتباطی برای مشتریان")
+            AdminTextField("واتساپ (شماره با کد کشور، مثل 989121234567)", whatsapp, { whatsapp = it }, keyboardType = KeyboardType.Phone)
+            AdminTextField("تلگرام (نام کاربری بدون @)", telegram, { telegram = it })
+            AdminTextField("اینستاگرام (نام کاربری)", instagram, { instagram = it })
+            AdminTextField("روبیکا (نام کاربری)", rubika, { rubika = it })
+            AdminTextField("ایتا (نام کاربری)", eitaa, { eitaa = it })
+            AdminTextField("بله (نام کاربری)", bale, { bale = it })
+
+            SectionLabel("هزینه ارسال به مشتری")
+            MoneyField("پیک (خالی = اعلام توسط فروشگاه)", courier, { courier = it })
+            MoneyField("پست (خالی = اعلام توسط فروشگاه)", post, { post = it })
 
             SectionLabel("مدت رزرو موجودی")
             IntField("سفارش خرده‌ی پرداخت‌نشده (ساعت)", retailHours, { retailHours = it }, Modifier.fillMaxWidth())
@@ -443,10 +471,18 @@ fun SettingsScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit
                             phone = phone.trim(),
                             address = address.trim(),
                             retailHoldHours = parseInt(retailHours, 24).coerceAtLeast(1),
-                            wholesaleHoldHours = parseInt(wholesaleHours, 0)
+                            wholesaleHoldHours = parseInt(wholesaleHours, 0),
+                            whatsapp = cleanHandle(whatsapp),
+                            telegram = cleanHandle(telegram),
+                            instagram = cleanHandle(instagram),
+                            rubika = cleanHandle(rubika),
+                            eitaa = cleanHandle(eitaa),
+                            bale = cleanHandle(bale),
+                            courierCost = parseMoney(courier),
+                            postCost = parseMoney(post)
                         )
                     )
-                    toast(context, "تنظیمات ذخیره شد")
+                    toast(context, "تنظیمات ذخیره شد؛ برای رسیدن به مشتری‌ها کاتالوگ را دوباره منتشر کنید")
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("ذخیره تنظیمات") }
@@ -454,6 +490,11 @@ fun SettingsScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit
         }
     }
 }
+
+/** Usernames and numbers are kept as plain ASCII without @, spaces or links. */
+private fun cleanHandle(raw: String): String =
+    com.hamid.clothing.core.Validators.toLatinDigits(raw).trim().removePrefix("@").replace(" ", "")
+        .removePrefix("https://t.me/").removePrefix("https://instagram.com/")
 
 /** Sales per Jalali day for the last [days] days (oldest first), labelled with the day of month. */
 fun dailySales(store: AdminStore, now: Long, days: Int): List<Pair<String, Long>> =
