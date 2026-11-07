@@ -38,11 +38,13 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun BrandIcon(key: String, modifier: Modifier = Modifier, size: Dp = 48.dp, enabled: Boolean = true) {
     val custom = drawableId("brand_$key")
-    val base = modifier.size(size).alpha(if (enabled) 1f else 0.4f).clip(CircleShape)
+    val plain = modifier.size(size).alpha(if (enabled) 1f else 0.4f)
+    // a real logo is shown as it is (its own shape); the drawn fallbacks below are round
     if (custom != null) {
-        Image(painter = painterResource(custom), contentDescription = null, contentScale = ContentScale.Crop, modifier = base)
+        Image(painter = painterResource(custom), contentDescription = null, contentScale = ContentScale.Fit, modifier = plain)
         return
     }
+    val base = plain.clip(CircleShape)
     when (key) {
         "instagram" -> Box(
             modifier = base.background(Brush.linearGradient(listOf(Color(0xFF8A3AB9), Color(0xFFE1306C), Color(0xFFFCAF45)))),

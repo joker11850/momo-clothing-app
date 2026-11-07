@@ -200,7 +200,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
         item {
             PromoBanner(
-                "بنر اینستاگرام", "صفحه‌ی اینستاگرام ما", "هر روز استایل‌ها و مدل‌های تازه",
+                "instagram", "صفحه‌ی اینستاگرام ما", "هر روز استایل‌ها و مدل‌های تازه",
                 if (store.info.instagram.isEmpty()) "به‌زودی" else "@" + store.info.instagram,
                 listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63))
             ) {
@@ -210,7 +210,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
         item {
             PromoBanner(
-                "بنر تلگرام", "کانال تلگرام ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
+                "telegram", "کانال تلگرام ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
                 if (store.info.telegram.isEmpty()) "به‌زودی" else "t.me/" + store.info.telegram,
                 listOf(Color(0xFF123A6B), Color(0xFF1F5FA8))
             ) {
@@ -427,7 +427,8 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
 private fun PromoBanner(tag: String, title: String, subtitle: String, handle: String, colors: List<Color>, onClick: () -> Unit) {
     SoftCard(color = Color.Transparent, onClick = onClick) {
         Box(modifier = Modifier.fillMaxWidth().background(Brush.linearGradient(colors)).padding(22.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            BrandIcon(tag, Modifier.align(Alignment.TopEnd), size = 44.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(end = 56.dp)) {
                 Text(title, color = Color.White, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
                 Text(subtitle, color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.bodyMedium)
                 Surface(shape = RoundedCornerShape(50), color = Color.White.copy(alpha = 0.18f), modifier = Modifier.padding(top = 8.dp)) {
