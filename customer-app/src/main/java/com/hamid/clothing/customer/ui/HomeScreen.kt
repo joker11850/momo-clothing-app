@@ -5,6 +5,7 @@ package com.hamid.clothing.customer.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -190,9 +192,9 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                TrustCard("ارسال مطمئن", "بسته‌بندی استاندارد", Icons.Default.LocalShipping, Modifier.weight(1f))
-                TrustCard("پشتیبانی سریع", "پاسخ در پیام‌رسان‌ها", Icons.Default.SupportAgent, Modifier.weight(1f))
-                TrustCard("پرداخت آسان", "کارت‌به‌کارت و دفتری", Icons.Default.Payments, Modifier.weight(1f))
+                TrustCard("ارسال مطمئن", "بسته‌بندی استاندارد", Icons.Default.LocalShipping, BurgundyStyle, Modifier.weight(1f))
+                TrustCard("پشتیبانی سریع", "پاسخگویی در پیام‌رسان‌ها", Icons.Default.SupportAgent, EmeraldStyle, Modifier.weight(1f))
+                TrustCard("پرداخت آسان", "کارت‌به‌کارت و خرید دفتری", Icons.Default.Payments, ChampagneStyle, Modifier.weight(1f))
             }
         }
 
@@ -363,37 +365,66 @@ private fun QuickCard(
     }
 }
 
+private class TrustStyle(
+    val colors: List<Color>,
+    val title: Color,
+    val subtitle: Color,
+    val icon: Color,
+    val border: Color
+)
+
+private val BurgundyStyle = TrustStyle(
+    listOf(Color(0xFF8A2547), Color(0xFF4A1226)), Color.White, Color(0xFFF1DCE2), Color(0xFFE8C772), Color(0x66E8C772)
+)
+private val EmeraldStyle = TrustStyle(
+    listOf(Color(0xFF23705B), Color(0xFF0F3A2F)), Color.White, Color(0xFFD7EBE2), Color(0xFFE8C772), Color(0x66E8C772)
+)
+private val ChampagneStyle = TrustStyle(
+    listOf(Color(0xFFF0D898), Color(0xFFC79B45)), Color(0xFF3A2A10), Color(0xFF5A4318), Color(0xFF6B4A12), Color(0x66FFFFFF)
+)
+
+/** Luxury info tile: gradient background, gold icon, text sized to stay readable. */
 @Composable
-private fun TrustCard(title: String, subtitle: String, icon: ImageVector, modifier: Modifier) {
-    SoftCard(modifier = modifier.height(112.dp), color = TrustBg) {
+private fun TrustCard(title: String, subtitle: String, icon: ImageVector, style: TrustStyle, modifier: Modifier) {
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = modifier
+            .height(158.dp)
+            .shadow(6.dp, shape)
+            .clip(shape)
+            .background(Brush.linearGradient(style.colors))
+            .border(1.dp, style.border, shape)
+    ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Brown, modifier = Modifier.size(22.dp))
+            Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.16f), modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = style.icon, modifier = Modifier.size(26.dp))
+                }
+            }
             Text(
                 title,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = style.title,
+                style = MaterialTheme.typography.titleSmall,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                modifier = Modifier.padding(top = 6.dp)
+                modifier = Modifier.padding(top = 10.dp)
             )
             Text(
                 subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                color = Muted,
+                style = MaterialTheme.typography.bodySmall,
+                color = style.subtitle,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
-                modifier = Modifier.padding(top = 2.dp)
+                maxLines = 3,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
     }
 }
-
-/** Opaque version of the beige card color: a see-through card shows its own shadow as a pale box. */
-private val TrustBg = Color(0xFFF3E9D8)
 
 @Composable
 private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
