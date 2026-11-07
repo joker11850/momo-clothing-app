@@ -88,6 +88,7 @@ fun AccountingHubScreen(store: AdminStore, padding: PaddingValues, go: (Screen) 
         HubCard("هزینه‌ها", "هزینه‌های کاری و شخصی") { go(Screen.Expenses) }
         HubCard("حساب‌های بانکی", "کارت و شبای فروشگاه") { go(Screen.BankAccounts) }
         HubCard("گزارش‌ها", "فروش، سود، پرفروش‌ها و بدهکاران") { go(Screen.Reports) }
+        HubCard("پشتیبان‌گیری و بازیابی", "نسخه‌ی رمزنگاری‌شده از همه‌ی اطلاعات و عکس‌ها") { go(Screen.Backup) }
         HubCard("تنظیمات", "مشخصات فروشگاه و مدت رزرو موجودی") { go(Screen.Settings) }
     }
 }

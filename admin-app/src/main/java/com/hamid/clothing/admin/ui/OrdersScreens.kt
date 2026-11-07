@@ -36,6 +36,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import com.hamid.clothing.admin.InvoiceRenderer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -374,6 +379,7 @@ fun OrderFormScreen(
 @Composable
 fun OrderDetailScreen(store: AdminStore, padding: PaddingValues, orderId: String, onBack: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val order = store.order(orderId)
     if (order == null) {
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -464,12 +470,31 @@ fun OrderDetailScreen(store: AdminStore, padding: PaddingValues, orderId: String
             if (OrderStatus.CANCELLED in allowed) {
                 OutlinedButton(onClick = { confirmCancel = true }, modifier = Modifier.fillMaxWidth()) { Text("لغو سفارش", color = Danger) }
             }
+            Button(
+                onClick = {
+                    scope.launch {
+                        val model = store.invoiceModel(order.id)
+                        if (model == null) {
+                            toast(context, "فاکتور ساخته نشد")
+                        } else {
+                            val file = try {
+                                withContext(Dispatchers.Default) { InvoiceRenderer.renderToFile(context, model) }
+                            } catch (e: Exception) {
+                                null
+                            }
+                            if (file == null) toast(context, "ساخت تصویر فاکتور ناموفق بود")
+                            else shareFile(context, file, "image/png", "ارسال فاکتور")
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("فاکتور تصویری (ارسال برای مشتری)") }
             OutlinedButton(
                 onClick = {
                     shareText(context, InvoiceText.build(order, customerName, store.settings.shopName.ifBlank { "فروشگاه" }))
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("اشتراک‌گذاری فاکتور") }
+            ) { Text("فاکتور به‌صورت متن") }
 
             if (order.history.isNotEmpty()) {
                 SectionLabel("روند سفارش")

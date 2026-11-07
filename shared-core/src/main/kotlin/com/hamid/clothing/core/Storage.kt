@@ -16,7 +16,9 @@ data class StoreSnapshot(
     val cheques: List<Cheque> = emptyList(),
     val expenses: List<Expense> = emptyList(),
     val bankAccounts: List<BankAccount> = emptyList(),
-    val settings: StoreSettings = StoreSettings()
+    val settings: StoreSettings = StoreSettings(),
+    /** Special prices agreed with single customers. */
+    val customPrices: List<CustomerPrice> = emptyList()
 )
 
 /** JSON (de)serialisation of [StoreSnapshot]. Uses org.json, which Android provides. */
@@ -37,6 +39,13 @@ object DataCodec {
         root.put("expenses", jsonArray(s.expenses) { expense(it) })
         root.put("bankAccounts", jsonArray(s.bankAccounts) { bank(it) })
         root.put("settings", settings(s.settings))
+        root.put("customPrices", jsonArray(s.customPrices) { c ->
+            val o = JSONObject()
+            o.put("customerId", c.customerId)
+            o.put("productId", c.productId)
+            o.put("price", c.price)
+            o
+        })
         return root.toString()
     }
 
@@ -55,7 +64,10 @@ object DataCodec {
             cheques = root.optJSONArray("cheques").objects { readCheque(it) },
             expenses = root.optJSONArray("expenses").objects { readExpense(it) },
             bankAccounts = root.optJSONArray("bankAccounts").objects { readBank(it) },
-            settings = root.optJSONObject("settings")?.let { readSettings(it) } ?: StoreSettings()
+            settings = root.optJSONObject("settings")?.let { readSettings(it) } ?: StoreSettings(),
+            customPrices = root.optJSONArray("customPrices").objects {
+                CustomerPrice(it.getString("customerId"), it.getString("productId"), it.getLong("price"))
+            }
         )
     }
 

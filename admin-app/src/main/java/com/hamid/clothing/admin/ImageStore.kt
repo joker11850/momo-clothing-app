@@ -35,6 +35,25 @@ class ImageStore(context: Context) {
         dir.listFiles()?.forEach { it.delete() }
     }
 
+    /** Empty folder next to the photos where a restore can unpack before anything is replaced. */
+    fun newStaging(): File {
+        val staging = File(dir.parentFile, "product-images-new")
+        staging.deleteRecursively()
+        staging.mkdirs()
+        return staging
+    }
+
+    /** Replaces all photos with the files of [staging] (then removes it). */
+    fun replaceWith(staging: File) {
+        deleteAll()
+        staging.listFiles()?.forEach { f ->
+            if (CatalogPackage.isSafeImageName(f.name) && !f.renameTo(File(dir, f.name))) {
+                f.copyTo(File(dir, f.name), overwrite = true)
+            }
+        }
+        staging.deleteRecursively()
+    }
+
     /**
      * Reads a photo chosen by the user, fixes its rotation, scales it to at most [maxSide] pixels and saves
      * it as a JPEG. Returns the new file name, or null when the photo could not be read. Call off the main thread.

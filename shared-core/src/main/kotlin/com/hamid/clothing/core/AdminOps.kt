@@ -16,7 +16,9 @@ object OrderBuilder {
         lines: List<DraftLine>,
         products: List<Product>,
         discounts: List<Discount>,
-        now: Long
+        now: Long,
+        /** productId -> special price of this customer */
+        customPrices: Map<String, Long> = emptyMap()
     ): List<OrderItem> {
         val byId = products.associateBy { it.id }
         return lines.mapNotNull { line ->
@@ -24,7 +26,7 @@ object OrderBuilder {
             if (product == null || line.quantity <= 0) {
                 null
             } else {
-                val quote = PricingEngine.quote(product, customer, emptyMap(), discounts, null, now)
+                val quote = PricingEngine.quote(product, customer, customPrices, discounts, null, now)
                 val unit = line.unitPriceOverride ?: quote.unitPrice
                 OrderItem(
                     productId = product.id,

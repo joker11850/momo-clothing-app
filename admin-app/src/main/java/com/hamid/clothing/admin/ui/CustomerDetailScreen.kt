@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -63,6 +64,10 @@ fun CustomerDetailScreen(
     val rows = book.statement().reversed()
 
     var entryType by remember { mutableStateOf<EntryType?>(null) }
+    var pickPriceProduct by remember { mutableStateOf(false) }
+    var priceProductId by remember { mutableStateOf<String?>(null) }
+    var priceText by remember { mutableStateOf("") }
+    val specials = store.customPricesOf(customer.id)
     var confirmDelete by remember { mutableStateOf(false) }
     var deleteError by remember { mutableStateOf<String?>(null) }
 
@@ -132,6 +137,37 @@ fun CustomerDetailScreen(
                 if (customer.adminNote.isNotBlank()) InfoLine("یادداشت", customer.adminNote)
             }
 
+            SectionLabel("قیمت‌های اختصاصی")
+            if (specials.isEmpty()) {
+                Text(
+                    "قیمت اختصاصی تعریف نشده است. قیمت اختصاصی روی همه‌ی قیمت‌ها و تخفیف‌ها برای این مشتری مقدم است.",
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            for ((productId, price) in specials) {
+                val product = store.products.firstOrNull { it.id == productId }
+                AdminCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(product?.name ?: "کالای حذف‌شده", fontWeight = FontWeight.Bold)
+                            Text(
+                                "اختصاصی: ${formatToman(price)}" + if (product != null) " · خرده: ${formatToman(product.retailPrice)}" else "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Gold
+                            )
+                            if (product != null && price < product.landedCost) {
+                                Text("پایین‌تر از قیمت تمام‌شده است", style = MaterialTheme.typography.bodySmall, color = Danger)
+                            }
+                        }
+                        IconButton(onClick = { store.removeCustomPrice(customer.id, productId) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "حذف", tint = Danger)
+                        }
+                    }
+                }
+            }
+            OutlinedButton(onClick = { pickPriceProduct = true }, modifier = Modifier.fillMaxWidth()) { Text("+ افزودن قیمت اختصاصی") }
+
             SectionLabel("گردش حساب")
             if (rows.isEmpty()) {
                 Text("هنوز تراکنشی ثبت نشده است.", color = Muted)
@@ -166,6 +202,50 @@ fun CustomerDetailScreen(
         }
     }
 
+    if (pickPriceProduct) {
+        PickerDialog(
+            title = "انتخاب کالا",
+            options = store.products.map { it.id to "${it.name} (${it.code})" },
+            onPick = { id ->
+                pickPriceProduct = false
+                priceProductId = id
+                priceText = (specials[id] ?: store.products.firstOrNull { it.id == id }?.let { if (customer.canSeeWholesale && it.wholesalePrice > 0) it.wholesalePrice else it.retailPrice } ?: 0L).toString()
+            },
+            onDismiss = { pickPriceProduct = false }
+        )
+    }
+    val priceFor = priceProductId
+    if (priceFor != null) {
+        val product = store.products.firstOrNull { it.id == priceFor }
+        var priceError by remember(priceFor) { mutableStateOf<String?>(null) }
+        AlertDialog(
+            onDismissRequest = { priceProductId = null },
+            title = { Text(product?.name ?: "قیمت اختصاصی") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (product != null) {
+                        Text(
+                            "خرده: ${formatToman(product.retailPrice)} · عمده: ${formatToman(product.wholesalePrice)} · تمام‌شده: ${formatToman(product.landedCost)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Muted
+                        )
+                    }
+                    MoneyField("قیمت اختصاصی این مشتری", priceText, { priceText = it })
+                    if (product != null && parseMoney(priceText) in 1 until product.landedCost) {
+                        Text("این قیمت پایین‌تر از قیمت تمام‌شده است.", color = Danger, style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (priceError != null) Text(priceError ?: "", color = Danger)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val result = store.setCustomPrice(customer.id, priceFor, parseMoney(priceText))
+                    if (result == null) priceProductId = null else priceError = result
+                }) { Text("ذخیره") }
+            },
+            dismissButton = { TextButton(onClick = { priceProductId = null }) { Text("انصراف") } }
+        )
+    }
     val pendingType = entryType
     if (pendingType != null) {
         var amountText by remember(pendingType) { mutableStateOf("") }

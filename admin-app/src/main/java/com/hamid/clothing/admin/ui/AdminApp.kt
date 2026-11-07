@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,6 +54,7 @@ sealed interface Screen {
     data object Reports : Screen
     data object Settings : Screen
     data object Publish : Screen
+    data object Backup : Screen
 }
 
 /** Tiny back stack: tabs replace the whole stack, other screens are pushed. */
@@ -104,7 +105,8 @@ fun AdminApp(store: AdminStore) {
                 onOpenCheques = { nav.go(Screen.Cheques(ChequeDirection.RECEIVED)) },
                 onOpenReports = { nav.go(Screen.Reports) },
                 onOpenSettings = { nav.go(Screen.Settings) },
-                onOpenPublish = { nav.go(Screen.Publish) }
+                onOpenPublish = { nav.go(Screen.Publish) },
+                onOpenBackup = { nav.go(Screen.Backup) }
             )
             is Screen.Orders -> OrdersScreen(
                 store = store,
@@ -225,6 +227,7 @@ fun AdminApp(store: AdminStore) {
             Screen.Reports -> ReportsScreen(store, padding) { nav.back() }
             Screen.Settings -> SettingsScreen(store, padding) { nav.back() }
             Screen.Publish -> PublishScreen(store, padding) { nav.back() }
+            Screen.Backup -> BackupScreen(store, padding) { nav.back() }
         }
     }
 
@@ -259,7 +262,7 @@ private fun AdminBottomBar(nav: Nav, current: Screen) {
         NavigationBarItem(
             selected = current is Screen.Orders,
             onClick = { nav.tab(Screen.Orders()) },
-            icon = { Icon(Icons.Default.ReceiptLong, contentDescription = null) },
+            icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
             label = { Text("سفارش‌ها") },
             colors = itemColors
         )

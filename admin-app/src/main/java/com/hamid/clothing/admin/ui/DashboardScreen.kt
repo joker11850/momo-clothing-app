@@ -39,7 +39,8 @@ fun DashboardScreen(
     onOpenCheques: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenPublish: () -> Unit
+    onOpenPublish: () -> Unit,
+    onOpenBackup: () -> Unit
 ) {
     val now = System.currentTimeMillis()
     val (dayStart, dayEnd) = Periods.day(now)
@@ -78,6 +79,20 @@ fun DashboardScreen(
                     OutlinedButton(onClick = { confirmClear = true }, modifier = Modifier.padding(top = 8.dp)) {
                         Text("پاک‌کردن داده‌های آزمایشی")
                     }
+                }
+            }
+        }
+
+        if (store.lastBackupAt == 0L || now - store.lastBackupAt > 7 * 86_400_000L) {
+            item {
+                AdminCard(onClick = onOpenBackup) {
+                    Text("از اطلاعات پشتیبان بگیرید", fontWeight = FontWeight.Bold, color = Danger)
+                    Text(
+                        if (store.lastBackupAt == 0L) "هنوز پشتیبان‌گیری نکرده‌اید. اگر گوشی گم یا ریست شود، اطلاعات از بین می‌رود."
+                        else "آخرین پشتیبان: ${faDate(store.lastBackupAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Muted
+                    )
                 }
             }
         }

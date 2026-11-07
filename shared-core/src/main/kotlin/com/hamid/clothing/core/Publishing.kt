@@ -117,7 +117,7 @@ object CatalogPackage {
         while (true) {
             val entry = zip.nextEntry ?: break
             if (entry.isDirectory) continue
-            val bytes = readLimited(zip)
+            val bytes = ZipLimits.readLimited(zip)
             total += bytes.size
             require(total <= MAX_TOTAL_BYTES) { "catalog file is too large" }
             val name = entry.name
@@ -130,8 +130,11 @@ object CatalogPackage {
         }
         return data ?: throw IllegalArgumentException("catalog.json not found")
     }
+}
 
-    private fun readLimited(zip: ZipInputStream): ByteArray {
+/** Reads one zip entry without ever holding more than [CatalogPackage.MAX_ENTRY_BYTES]. */
+internal object ZipLimits {
+    fun readLimited(zip: ZipInputStream): ByteArray {
         val out = ByteArrayOutputStream()
         val buffer = ByteArray(16 * 1024)
         var size = 0L
@@ -139,7 +142,7 @@ object CatalogPackage {
             val n = zip.read(buffer)
             if (n < 0) break
             size += n
-            require(size <= MAX_ENTRY_BYTES) { "catalog entry is too large" }
+            require(size <= CatalogPackage.MAX_ENTRY_BYTES) { "zip entry is too large" }
             out.write(buffer, 0, n)
         }
         return out.toByteArray()

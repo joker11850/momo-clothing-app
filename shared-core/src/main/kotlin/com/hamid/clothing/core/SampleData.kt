@@ -161,6 +161,7 @@ object SampleData {
         cheques = cheques(now),
         expenses = expenses(now),
         bankAccounts = bankAccounts(),
-        settings = StoreSettings(shopName = "فروشگاه پوشاک", phone = "", address = "")
+        settings = StoreSettings(shopName = "فروشگاه پوشاک", phone = "", address = ""),
+        customPrices = listOf(CustomerPrice("c-2", "p-1", 1_100_000L))
     )
 }

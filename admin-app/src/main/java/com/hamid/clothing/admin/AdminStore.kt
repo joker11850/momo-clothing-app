@@ -4,7 +4,16 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.hamid.clothing.core.BackupCrypto
+import com.hamid.clothing.core.BackupPackage
 import com.hamid.clothing.core.BankAccount
+import com.hamid.clothing.core.BulkEdit
+import com.hamid.clothing.core.BulkEditEngine
+import com.hamid.clothing.core.BulkResult
+import com.hamid.clothing.core.CustomerPrice
+import com.hamid.clothing.core.InvoiceBuilder
+import com.hamid.clothing.core.InvoiceModel
+import com.hamid.clothing.core.PriceBook
 import com.hamid.clothing.core.CatalogBuilder
 import com.hamid.clothing.core.CatalogPackage
 import com.hamid.clothing.core.JalaliCalendar
@@ -44,7 +53,10 @@ import com.hamid.clothing.core.StoreSettings
 import com.hamid.clothing.core.StoreSnapshot
 import com.hamid.clothing.core.Supplier
 import com.hamid.clothing.core.Validators
+import android.net.Uri
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.UUID
 
 data class OrderCreation(val errors: List<String>, val order: Order?)
@@ -52,6 +64,11 @@ data class OrderCreation(val errors: List<String>, val order: Order?)
 enum class ThemeMode { DARK, LIGHT, SYSTEM }
 
 data class PublishResult(val file: File, val products: Int, val images: Int, val bytes: Long)
+
+data class BackupFile(val file: File, val images: Int, val bytes: Long)
+
+/** A backup that was decrypted and checked; nothing is replaced until [AdminStore.applyRestore]. */
+class PreparedRestore(val snapshot: StoreSnapshot, val imagesDir: File, val createdAt: Long)
 
 /**
  * Single source of truth for the admin app. Data is local and encrypted; the same API will later
@@ -70,6 +87,9 @@ class AdminStore(context: Context) {
         private set
 
     var lastPublishedAt by mutableStateOf(prefs.getLong("catalog_published_at", 0L))
+        private set
+
+    var lastBackupAt by mutableStateOf(prefs.getLong("last_backup_at", 0L))
         private set
 
     var snapshot by mutableStateOf(StoreSnapshot())
@@ -92,6 +112,7 @@ class AdminStore(context: Context) {
     val expenses: List<Expense> get() = snapshot.expenses
     val bankAccounts: List<BankAccount> get() = snapshot.bankAccounts
     val settings: StoreSettings get() = snapshot.settings
+    val customPrices: List<CustomerPrice> get() = snapshot.customPrices
     val isSample: Boolean get() = snapshot.sample
     val balances: Map<String, Long> get() = LedgerMath.balances(snapshot.ledger)
 
@@ -239,7 +260,7 @@ class AdminStore(context: Context) {
             return "این کالا در سفارش‌ها استفاده شده است و حذف نمی‌شود. می‌توانید آن را غیرفعال کنید."
         }
         val removed = products.firstOrNull { it.id == id }
-        update { it.copy(products = it.products.filter { p -> p.id != id }) }
+        update { it.copy(products = it.products.filter { p -> p.id != id }, customPrices = PriceBook.removeProduct(it.customPrices, id)) }
         removed?.imageUris?.forEach { images.delete(it) }
         rebuildInventory()
         return null
@@ -261,7 +282,7 @@ class AdminStore(context: Context) {
         if (ledger.any { it.partyId == id } || orders.any { it.customerId == id } || cheques.any { it.partyId == id }) {
             return "این مشتری گردش حساب، سفارش یا چک دارد و حذف نمی‌شود. می‌توانید او را مسدود کنید."
         }
-        update { it.copy(customers = it.customers.filter { c -> c.id != id }) }
+        update { it.copy(customers = it.customers.filter { c -> c.id != id }, customPrices = PriceBook.removeCustomer(it.customPrices, id)) }
         return null
     }
 
@@ -300,7 +321,7 @@ class AdminStore(context: Context) {
         address: String
     ): OrderCreation {
         val customer = customers.firstOrNull { it.id == customerId }
-        val items = OrderBuilder.priceLines(customer, lines, products, emptyList(), now())
+        val items = OrderBuilder.priceLines(customer, lines, products, emptyList(), now(), customPricesOf(customer?.id ?: ""))
         val errors = OrderBuilder.validate(
             customer, lines, items, products, shipping, payment, receiverName, receiverPhone, address,
             extraDiscount, shippingCost, balanceOf(customer?.id ?: "")
@@ -503,6 +524,122 @@ class AdminStore(context: Context) {
 
     fun deleteBankAccount(id: String) {
         update { it.copy(bankAccounts = it.bankAccounts.filter { b -> b.id != id }) }
+    }
+
+    // ---------- special prices ----------
+
+    fun customPricesOf(customerId: String): Map<String, Long> = PriceBook.forCustomer(customPrices, customerId)
+
+    /** Returns an error message, or null when saved. */
+    fun setCustomPrice(customerId: String, productId: String, price: Long): String? {
+        if (price <= 0) return "قیمت را وارد کنید"
+        if (customers.none { it.id == customerId }) return "مشتری پیدا نشد"
+        if (products.none { it.id == productId }) return "کالا پیدا نشد"
+        update { it.copy(customPrices = PriceBook.set(it.customPrices, customerId, productId, price)) }
+        return null
+    }
+
+    fun removeCustomPrice(customerId: String, productId: String) {
+        update { it.copy(customPrices = PriceBook.remove(it.customPrices, customerId, productId)) }
+    }
+
+    // ---------- bulk edit ----------
+
+    /** Returns validation errors, or the result of the edit when none. */
+    fun bulkEdit(ids: Set<String>, edit: BulkEdit): Pair<List<String>, BulkResult?> {
+        if (ids.isEmpty()) return listOf("هیچ کالایی انتخاب نشده است") to null
+        val errors = BulkEditEngine.validate(edit, categories)
+        if (errors.isNotEmpty()) return errors to null
+        val result = BulkEditEngine.apply(products, ids, edit)
+        update { it.copy(products = result.products) }
+        rebuildInventory()
+        return emptyList<String>() to result
+    }
+
+    /** Deletes the products that are not used by any order. Returns (deleted, skipped). */
+    fun bulkDelete(ids: Set<String>): Pair<Int, Int> {
+        var deleted = 0
+        var skipped = 0
+        for (id in ids) {
+            if (deleteProduct(id) == null) deleted++ else skipped++
+        }
+        return deleted to skipped
+    }
+
+    // ---------- invoice picture ----------
+
+    fun invoiceModel(orderId: String): InvoiceModel? {
+        val order = order(orderId) ?: return null
+        val name = partyDisplayName(order.customerId)
+        return InvoiceBuilder.build(order, name, settings, balanceOf(order.customerId))
+    }
+
+    private fun partyDisplayName(id: String): String =
+        customers.firstOrNull { it.id == id }?.fullName ?: suppliers.firstOrNull { it.id == id }?.name ?: "نامشخص"
+
+    // ---------- backup and restore ----------
+
+    /** Writes backup-<date>.csbk (encrypted with [password]) in the cache folder. Call off the main thread. */
+    fun createBackup(password: CharArray): BackupFile {
+        val createdAt = now()
+        val dir = File(appContext.cacheDir, "backups")
+        dir.mkdirs()
+        dir.listFiles()?.forEach { it.delete() }
+        val d = JalaliCalendar.fromEpochMillis(createdAt)
+        val name = "backup-" + d.year + "-" + d.month.toString().padStart(2, '0') + "-" + d.day.toString().padStart(2, '0') + ".csbk"
+        val plain = File(dir, "plain.tmp")
+        var storedImages = 0
+        try {
+            plain.outputStream().buffered().use { out ->
+                storedImages = BackupPackage.write(out, snapshot, createdAt) { imageName -> images.read(imageName) }
+            }
+            val target = File(dir, name)
+            FileInputStream(plain).use { input ->
+                FileOutputStream(target).buffered().use { out -> BackupCrypto.encrypt(input, out, password) }
+            }
+            prefs.edit().putLong("last_backup_at", createdAt).apply()
+            lastBackupAt = createdAt
+            return BackupFile(target, storedImages, target.length())
+        } finally {
+            plain.delete()
+        }
+    }
+
+    /**
+     * Decrypts and checks a backup without touching current data.
+     * @throws com.hamid.clothing.core.WrongPasswordException when the password is wrong or the file is damaged
+     */
+    fun prepareRestore(uri: Uri, password: CharArray): PreparedRestore {
+        val cache = File(appContext.cacheDir, "restore")
+        cache.mkdirs()
+        val zip = File(cache, "restore.zip")
+        val staging = images.newStaging()
+        try {
+            val input = appContext.contentResolver.openInputStream(uri) ?: throw java.io.IOException("cannot open file")
+            input.use { src -> FileOutputStream(zip).buffered().use { out -> BackupCrypto.decrypt(src, out, password) } }
+            val data = FileInputStream(zip).buffered().use { zin ->
+                BackupPackage.read(zin) { imageName, bytes -> File(staging, imageName).writeBytes(bytes) }
+            }
+            return PreparedRestore(data.snapshot, staging, data.createdAt)
+        } catch (e: Exception) {
+            staging.deleteRecursively()
+            throw e
+        } finally {
+            zip.delete()
+        }
+    }
+
+    /** Replaces every piece of data with the prepared backup. Call on the main thread. */
+    fun applyRestore(prepared: PreparedRestore) {
+        images.replaceWith(prepared.imagesDir)
+        snapshot = prepared.snapshot
+        persist()
+        rebuildInventory()
+        expireOrders()
+    }
+
+    fun cancelRestore(prepared: PreparedRestore) {
+        prepared.imagesDir.deleteRecursively()
     }
 
     // ---------- appearance ----------

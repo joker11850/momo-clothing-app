@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="catalog" path="catalog/" />
+    <cache-path name="invoices" path="invoices/" />
+    <cache-path name="backups" path="backups/" />
 </paths>
