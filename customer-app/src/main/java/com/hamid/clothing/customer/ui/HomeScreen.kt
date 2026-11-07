@@ -95,7 +95,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
 
         item {
-            SoftCard(color = RoseLight.copy(alpha = 0.55f), onClick = { nav.tab(Screen.Shop()) }) {
+            SoftCard(color = Color(0xFFEFDFE0), onClick = { nav.tab(Screen.Shop()) }) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -111,11 +111,11 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                QuickCard("جست‌وجو", "محصول موردنظرت را پیدا کن", Icons.Default.Search, RoseLight, Burgundy, Modifier.weight(1f)) {
+                QuickCard("جست‌وجو", "جست‌وجوی کالا", Icons.Default.Search, RoseLight, Burgundy, Modifier.weight(1f)) {
                     nav.tab(Screen.Shop())
                 }
                 if (store.isLoggedIn) {
-                    QuickCard("حساب من", "سفارش‌ها و اطلاعات شما", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
+                    QuickCard("حساب من", "سفارش‌ها و مشخصات", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
                         nav.tab(Screen.Account)
                     }
                 } else {
@@ -123,7 +123,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                         nav.go(Screen.Login(null))
                     }
                 }
-                QuickCard("پشتیبانی", "پاسخگوی شما هستیم", Icons.Default.Headset, Mint, MintDark, Modifier.weight(1f)) {
+                QuickCard("پشتیبانی", "پاسخگوی شما", Icons.Default.Headset, Mint, MintDark, Modifier.weight(1f)) {
                     nav.tab(Screen.Contact)
                 }
             }
@@ -191,7 +191,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 TrustCard("ارسال مطمئن", "بسته‌بندی استاندارد", Icons.Default.LocalShipping, Modifier.weight(1f))
-                TrustCard("پشتیبانی سریع", "پاسخگویی در پیام‌رسان‌ها", Icons.Default.SupportAgent, Modifier.weight(1f))
+                TrustCard("پشتیبانی سریع", "پاسخ در پیام‌رسان‌ها", Icons.Default.SupportAgent, Modifier.weight(1f))
                 TrustCard("پرداخت آسان", "کارت‌به‌کارت و دفتری", Icons.Default.Payments, Modifier.weight(1f))
             }
         }
@@ -331,35 +331,69 @@ private fun QuickCard(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    SoftCard(modifier = modifier, color = color, onClick = onClick) {
+    SoftCard(modifier = modifier.height(132.dp), color = color, onClick = onClick) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(52.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = null, tint = accent) }
+            Surface(shape = CircleShape, color = Color(0xFFFFFFFF), modifier = Modifier.size(38.dp)) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+                }
             }
-            Text(title, fontWeight = FontWeight.ExtraBold, color = accent, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = Muted, textAlign = TextAlign.Center, minLines = 2)
+            Text(
+                title,
+                fontWeight = FontWeight.ExtraBold,
+                color = accent,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = Muted,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(top = 2.dp)
+            )
         }
     }
 }
 
 @Composable
 private fun TrustCard(title: String, subtitle: String, icon: ImageVector, modifier: Modifier) {
-    SoftCard(modifier = modifier, color = Beige.copy(alpha = 0.6f)) {
+    SoftCard(modifier = modifier.height(112.dp), color = TrustBg) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Brown, modifier = Modifier.size(32.dp))
-            Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-            Text(subtitle, style = MaterialTheme.typography.labelSmall, color = Muted, textAlign = TextAlign.Center, minLines = 2)
+            Icon(icon, contentDescription = null, tint = Brown, modifier = Modifier.size(22.dp))
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(top = 6.dp)
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = Muted,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(top = 2.dp)
+            )
         }
     }
 }
+
+/** Opaque version of the beige card color: a see-through card shows its own shadow as a pale box. */
+private val TrustBg = Color(0xFFF3E9D8)
 
 @Composable
 private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
