@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -76,6 +78,15 @@ import androidx.compose.foundation.rememberScrollState
 fun formatToman(amount: Long): String = PersianFormat.money(amount) + " تومان"
 fun faInt(n: Int): String = PersianFormat.digits(n.toString())
 fun faDigits(s: String): String = PersianFormat.digits(s)
+
+private val LuxuryGoldBrush = Brush.horizontalGradient(
+    colors = listOf(
+        Color(0xFF9A6B16),
+        Color(0xFFD5A84D),
+        Color(0xFFF0D58A),
+        Color(0xFFB47B22)
+    )
+)
 
 fun toast(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -160,15 +171,16 @@ fun SoftCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(26.dp)
     val colors = CardDefaults.cardColors(containerColor = color)
-    val elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    val elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    val border = BorderStroke(1.dp, Gold.copy(alpha = 0.14f))
     if (onClick != null) {
-        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, elevation = elevation) {
+        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
             Column(content = content)
         }
     } else {
-        Card(modifier = modifier, shape = shape, colors = colors, elevation = elevation) {
+        Card(modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
             Column(content = content)
         }
     }
@@ -179,11 +191,19 @@ fun GoldButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.height(56.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = GoldInk)
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = GoldInk),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Text(text, fontWeight = FontWeight.Bold)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(LuxuryGoldBrush, RoundedCornerShape(18.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -332,8 +352,19 @@ fun ProductCard(
     val quote: PriceQuote = store.quoteFor(product)
     val favorite = store.isFavorite(product.id)
     SoftCard(modifier = modifier, onClick = onClick) {
-        Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-            ProductArt(store, product, Modifier.fillMaxWidth().height(180.dp))
+        Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
+            ProductArt(store, product, Modifier.fillMaxWidth().height(196.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Ink.copy(alpha = 0.20f))
+                        )
+                    )
+            )
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.92f),
@@ -359,7 +390,7 @@ fun ProductCard(
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
             }
