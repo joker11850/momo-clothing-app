@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -191,10 +193,10 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
                 TrustCard("ارسال مطمئن", "بسته‌بندی استاندارد", Icons.Default.LocalShipping, BurgundyStyle, Modifier.weight(1f))
-                TrustCard("پشتیبانی سریع", "پاسخگویی در پیام‌رسان‌ها", Icons.Default.SupportAgent, EmeraldStyle, Modifier.weight(1f))
-                TrustCard("پرداخت آسان", "کارت‌به‌کارت و خرید دفتری", Icons.Default.Payments, ChampagneStyle, Modifier.weight(1f))
+                TrustCard("پشتیبانی سریع", "پاسخ در پیام‌رسان‌ها", Icons.Default.SupportAgent, EmeraldStyle, Modifier.weight(1f))
+                TrustCard("پرداخت آسان", "کارت‌به‌کارت و دفتری", Icons.Default.Payments, ChampagneStyle, Modifier.weight(1f))
             }
         }
 
@@ -389,20 +391,20 @@ private fun TrustCard(title: String, subtitle: String, icon: ImageVector, style:
     val shape = RoundedCornerShape(24.dp)
     Box(
         modifier = modifier
-            .height(158.dp)
+            .fillMaxHeight()
             .shadow(6.dp, shape)
             .clip(shape)
             .background(Brush.linearGradient(style.colors))
             .border(1.dp, style.border, shape)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().align(Alignment.Center).padding(horizontal = 8.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.16f), modifier = Modifier.size(44.dp)) {
+            Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.16f), modifier = Modifier.size(40.dp)) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, contentDescription = null, tint = style.icon, modifier = Modifier.size(26.dp))
+                    Icon(icon, contentDescription = null, tint = style.icon, modifier = Modifier.size(24.dp))
                 }
             }
             Text(
