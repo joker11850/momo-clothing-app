@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.hamid.clothing.admin.ThemeMode
+val Burgundy = Color(0xFF6E1835)
+val BurgundyDeep = Color(0xFF461024)
 
 /** Colors of one theme. Screens read them through the Gold, Muted, ... properties below. */
 class Palette(
@@ -112,8 +114,8 @@ fun AdminTheme(mode: ThemeMode, content: @Composable () -> Unit) {
     val palette = if (dark) DarkPalette else LightPalette
     val scheme = if (dark) {
         darkColorScheme(
-            primary = palette.gold,
-            onPrimary = Color(0xFF1A1405),
+            primary = Burgundy,
+            onPrimary = Color.White,
             secondary = palette.gold,
             background = palette.bg,
             onBackground = palette.text,
@@ -126,7 +128,7 @@ fun AdminTheme(mode: ThemeMode, content: @Composable () -> Unit) {
         )
     } else {
         lightColorScheme(
-            primary = palette.gold,
+            primary = Burgundy,
             onPrimary = Color(0xFFFFFFFF),
             secondary = palette.gold,
             background = palette.bg,

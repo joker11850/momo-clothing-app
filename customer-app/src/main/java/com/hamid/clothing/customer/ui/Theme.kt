@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.sp
 val Cream = Color(0xFFF5F0E9)
 val CardColor = Color(0xFFFFFCF8)
 val Burgundy = Color(0xFF6E1835)
+val BurgundyDeep = Color(0xFF461024)
+val BurgundyBright = Color(0xFF8A2850)
 val Ink = Color(0xFF241C1B)
 val Brown = Color(0xFF8B6849)
 val Gold = Color(0xFFC89A42)
@@ -58,7 +60,7 @@ fun CustomerTheme(content: @Composable () -> Unit) {
             onSurfaceVariant = Muted,
             outline = Line,
             error = Danger,
-            surfaceTint = Gold
+            surfaceTint = Burgundy
         ),
         shapes = CustomerShapes,
         typography = CustomerTypography,

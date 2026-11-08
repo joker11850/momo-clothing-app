@@ -79,12 +79,12 @@ fun formatToman(amount: Long): String = PersianFormat.money(amount) + " توما
 fun faInt(n: Int): String = PersianFormat.digits(n.toString())
 fun faDigits(s: String): String = PersianFormat.digits(s)
 
-private val LuxuryGoldBrush = Brush.horizontalGradient(
+private val LuxuryBurgundyBrush = Brush.horizontalGradient(
     colors = listOf(
-        Color(0xFF9A6B16),
-        Color(0xFFD5A84D),
-        Color(0xFFF0D58A),
-        Color(0xFFB47B22)
+        BurgundyDeep,
+        Burgundy,
+        BurgundyBright,
+        Color(0xFF5A122B)
     )
 )
 
@@ -193,16 +193,16 @@ fun GoldButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
         enabled = enabled,
         modifier = modifier.height(56.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = GoldInk),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
         contentPadding = PaddingValues(0.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(LuxuryGoldBrush, RoundedCornerShape(18.dp)),
+                .background(LuxuryBurgundyBrush, RoundedCornerShape(18.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text, fontWeight = FontWeight.Bold)
+            Text(text, color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
