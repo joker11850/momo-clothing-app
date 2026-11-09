@@ -231,6 +231,10 @@ fun AdminApp(store: AdminStore) {
         }
     }
 
+    IncomingOrderDialog(store) { id ->
+        nav.go(Screen.OrderDetail(id))
+    }
+
     val message = store.notice
     if (message != null) {
         AlertDialog(

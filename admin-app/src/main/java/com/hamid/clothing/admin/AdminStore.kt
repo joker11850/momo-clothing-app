@@ -11,7 +11,11 @@ import com.hamid.clothing.core.BulkEdit
 import com.hamid.clothing.core.BulkEditEngine
 import com.hamid.clothing.core.BulkResult
 import com.hamid.clothing.core.CustomerPrice
+import com.hamid.clothing.core.ImportPlan
 import com.hamid.clothing.core.InvoiceBuilder
+import com.hamid.clothing.core.OrderExchange
+import com.hamid.clothing.core.OrderFile
+import com.hamid.clothing.core.OrderImporter
 import com.hamid.clothing.core.InvoiceModel
 import com.hamid.clothing.core.PriceBook
 import com.hamid.clothing.core.CatalogBuilder
@@ -318,7 +322,9 @@ class AdminStore(context: Context) {
         extraDiscount: Long,
         receiverName: String,
         receiverPhone: String,
-        address: String
+        address: String,
+        externalRef: String = "",
+        note: String = ""
     ): OrderCreation {
         val customer = customers.firstOrNull { it.id == customerId }
         val items = OrderBuilder.priceLines(customer, lines, products, emptyList(), now(), customPricesOf(customer?.id ?: ""))
@@ -331,7 +337,7 @@ class AdminStore(context: Context) {
         val draft = OrderBuilder.build(
             newId(), CheckoutService.nextNumber(orders), customer, items, shipping, shippingCost, payment,
             extraDiscount, receiverName, receiverPhone, address, now()
-        )
+        ).copy(externalRef = externalRef, note = note)
         val p = processor()
         var result = p.submit(draft, now())
         // an order entered by the shop owner counts as approved
@@ -524,6 +530,78 @@ class AdminStore(context: Context) {
 
     fun deleteBankAccount(id: String) {
         update { it.copy(bankAccounts = it.bankAccounts.filter { b -> b.id != id }) }
+    }
+
+    // ---------- orders sent by the customer app ----------
+
+    /** An order file waiting for the owner's decision. */
+    var pendingOrder by mutableStateOf<OrderFile?>(null)
+        private set
+
+    /** Reads an incoming file. Returns an error message, or null when an order is waiting for confirmation. */
+    fun stageIncoming(text: String): String? {
+        return try {
+            when (DataCodec.exchangeKind(text)) {
+                "order" -> {
+                    val file = DataCodec.decodeOrderFile(text)
+                    if (orders.any { it.externalRef == file.clientOrderId }) {
+                        "این سفارش قبلاً ثبت شده است"
+                    } else {
+                        pendingOrder = file
+                        null
+                    }
+                }
+                null -> "این فایل، فایل سفارش اپ مشتری نیست"
+                else -> "این فایل سفارش نیست"
+            }
+        } catch (e: Exception) {
+            "فایل سفارش معتبر نیست"
+        }
+    }
+
+    fun discardIncoming() {
+        pendingOrder = null
+    }
+
+    fun incomingPlan(): ImportPlan? {
+        val file = pendingOrder ?: return null
+        return OrderImporter.plan(file, customers, products, now()) { newId() }
+    }
+
+    /**
+     * Registers the waiting order. Prices always come from the shop, never from the file.
+     * A new phone number creates a retail customer (wholesale or credit is never granted by a file).
+     */
+    fun confirmIncomingOrder(plan: ImportPlan, shipping: ShippingMethod, shippingCost: Long, payment: PaymentMethod): OrderCreation {
+        val file = pendingOrder ?: return OrderCreation(listOf("سفارشی در انتظار نیست"), null)
+        if (orders.any { it.externalRef == file.clientOrderId }) return OrderCreation(listOf("این سفارش قبلاً ثبت شده است"), null)
+        var customerId = plan.customer?.id
+        if (customerId == null) {
+            val created = plan.newCustomer ?: return OrderCreation(listOf("شماره موبایل مشتری معتبر نیست"), null)
+            val problems = saveCustomer(created)
+            if (problems.isNotEmpty()) return OrderCreation(problems, null)
+            customerId = created.id
+        }
+        val note = "از اپ مشتری، شماره ${file.clientNumber}" + if (file.note.isNotBlank()) " — ${file.note}" else ""
+        val result = createOrder(
+            customerId, plan.lines, shipping, shippingCost, payment, 0L,
+            file.receiverName.ifBlank { file.customerName }, file.receiverPhone.ifBlank { file.customerPhone }, file.address,
+            externalRef = file.clientOrderId, note = note
+        )
+        if (result.order != null) pendingOrder = null
+        return result
+    }
+
+    /** File with the current status of an order that came from a customer; null for orders typed in by the shop. */
+    fun statusFileFor(orderId: String): File? {
+        val order = order(orderId) ?: return null
+        val update = OrderExchange.updateFor(order, now()) ?: return null
+        val dir = File(appContext.cacheDir, "exchange")
+        dir.mkdirs()
+        dir.listFiles()?.forEach { it.delete() }
+        val file = File(dir, "status-" + order.number.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".csorder")
+        file.writeText(DataCodec.encodeOrderUpdate(update))
+        return file
     }
 
     // ---------- special prices ----------

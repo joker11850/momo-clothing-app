@@ -145,9 +145,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                             onClick = { nav.go(Screen.Shop(c.id)) },
                             shape = RoundedCornerShape(28.dp),
                             color = RoseLight,
-                            modifier = Modifier
-                                .size(92.dp)
-                                .border(1.dp, Gold.copy(alpha = 0.18f), RoundedCornerShape(28.dp))
+                            modifier = Modifier.size(92.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(Icons.Default.Checkroom, contentDescription = null, tint = Burgundy, modifier = Modifier.size(40.dp))
@@ -171,8 +169,6 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(32.dp))
-                        .shadow(7.dp, RoundedCornerShape(32.dp), ambientColor = Gold.copy(alpha = 0.10f), spotColor = Gold.copy(alpha = 0.16f))
-                        .border(1.dp, Gold.copy(alpha = 0.16f), RoundedCornerShape(32.dp))
                         .background(Rose)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -298,19 +294,11 @@ private fun HeroPager(nav: Nav) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(28.dp))
-                    .shadow(10.dp, RoundedCornerShape(28.dp), ambientColor = Gold.copy(alpha = 0.16f), spotColor = Gold.copy(alpha = 0.22f))
-                    .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(28.dp))
                     .background(Brush.linearGradient(s.colors))
             ) {
                 if (imageId != null) {
                     Image(painter = painterResource(imageId), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF241614).copy(alpha = 0.66f), Color.Transparent)
-                            )
-                        )
-                    )
+                    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)))
                 }
                 Column(
                     modifier = Modifier.align(Alignment.CenterStart).padding(22.dp),
@@ -330,7 +318,7 @@ private fun HeroPager(nav: Nav) {
                         .height(8.dp)
                         .width(if (pager.currentPage == i) 28.dp else 8.dp)
                         .clip(CircleShape)
-                        .background(if (pager.currentPage == i) Gold else Gold.copy(alpha = 0.26f))
+                        .background(if (pager.currentPage == i) Gold else Line)
                 )
             }
         }
@@ -404,7 +392,7 @@ private fun TrustCard(title: String, subtitle: String, icon: ImageVector, style:
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .shadow(8.dp, shape, ambientColor = Gold.copy(alpha = 0.12f), spotColor = Gold.copy(alpha = 0.18f))
+            .shadow(6.dp, shape)
             .clip(shape)
             .background(Brush.linearGradient(style.colors))
             .border(1.dp, style.border, shape)
@@ -447,8 +435,6 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .shadow(8.dp, RoundedCornerShape(28.dp), ambientColor = Gold.copy(alpha = 0.14f), spotColor = Gold.copy(alpha = 0.20f))
-            .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(28.dp))
             .background(Brush.linearGradient(listOf(Color(0xFFF1DDB2), Color(0xFFD9B36A))))
     ) {
         if (imageId != null) {

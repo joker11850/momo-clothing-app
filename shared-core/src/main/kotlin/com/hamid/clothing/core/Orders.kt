@@ -49,7 +49,10 @@ data class Order(
     val history: List<StatusChange> = emptyList(),
     val receiverName: String = "",
     val receiverPhone: String = "",
-    val address: String = ""
+    val address: String = "",
+    /** Id of the same order in the customer app (set when the order arrived as a file). */
+    val externalRef: String = "",
+    val note: String = ""
 ) {
     val subtotal: Long get() = items.sumOf { it.lineTotal }
     val total: Long get() = (subtotal - extraDiscount + shippingCost).coerceAtLeast(0L)

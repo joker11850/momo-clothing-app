@@ -3,4 +3,5 @@
     <cache-path name="catalog" path="catalog/" />
     <cache-path name="invoices" path="invoices/" />
     <cache-path name="backups" path="backups/" />
+    <cache-path name="exchange" path="exchange/" />
 </paths>

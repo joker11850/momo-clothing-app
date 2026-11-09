@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
         handleIncoming(intent)
     }
 
-    /** A catalog zip opened from a messenger or file manager ("open with" or share to this app). */
+    /** A catalog zip or an order-status file opened from a messenger, a file manager or the shop's app ("open with" or share to this app). */
     @Suppress("DEPRECATION")
     private fun handleIncoming(intent: Intent?) {
         val uri: Uri? = when (intent?.action) {
@@ -44,6 +44,6 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND -> intent?.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
             else -> null
         }
-        if (uri != null) scope.launch { store.importCatalog(uri) }
+        if (uri != null) scope.launch { store.importIncoming(uri) }
     }
 }

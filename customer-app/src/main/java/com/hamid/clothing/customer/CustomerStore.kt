@@ -21,7 +21,9 @@ import com.hamid.clothing.core.DataCodec
 import com.hamid.clothing.core.Discount
 import com.hamid.clothing.core.InventoryLedger
 import com.hamid.clothing.core.LedgerMath
+import com.hamid.clothing.core.FaLabels
 import com.hamid.clothing.core.Order
+import com.hamid.clothing.core.OrderExchange
 import com.hamid.clothing.core.OrderProcessor
 import com.hamid.clothing.core.OrderResult
 import com.hamid.clothing.core.OrderStatus
@@ -36,6 +38,7 @@ import com.hamid.clothing.core.StockKey
 import com.hamid.clothing.core.Validators
 import com.hamid.clothing.core.WholesaleRequest
 import com.hamid.clothing.core.WholesaleStatus
+import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -145,6 +148,7 @@ class CustomerStore(context: Context) {
     }
 
     private fun rebuildInventory() {
+        for (order in data.orders) inventory.release(order.id)
         inventory.loadFrom(products)
         for (order in data.orders) {
             val reserving = !order.stockCommitted && (
@@ -258,6 +262,80 @@ class CustomerStore(context: Context) {
     }
 
     fun shippingCost(method: ShippingMethod): Long = info.shippingCost(method)
+
+    // ---------- exchange with the admin app ----------
+
+    /** Writes the order as a .csorder file the shop's app can read. Returns null when the order is unknown. */
+    fun orderFileFor(orderId: String): File? {
+        val order = order(orderId) ?: return null
+        val customer = data.customer ?: return null
+        val payload = OrderExchange.fromOrder(order, customer.fullName.ifBlank { order.receiverName }, customer.phone)
+        val dir = File(appContext.cacheDir, "orders")
+        dir.mkdirs()
+        dir.listFiles()?.forEach { it.delete() }
+        val file = File(dir, "order-" + order.number.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".csorder")
+        file.writeText(DataCodec.encodeOrderFile(payload))
+        return file
+    }
+
+    /** A catalogue zip or an order-status file, from the file picker, a messenger or the admin app. */
+    suspend fun importIncoming(uri: Uri): ImportResult {
+        val sniffed = withContext(Dispatchers.IO) { sniff(uri) }
+        val text = sniffed.second
+        if (sniffed.first == "zip") return importCatalog(uri)
+        if (text != null && DataCodec.exchangeKind(text) == "order-update") return applyIncomingUpdate(text)
+        notice = "این فایل برای اپ فروشگاه نیست."
+        return ImportResult(false, "unknown file")
+    }
+
+    private fun sniff(uri: Uri): Pair<String, String?> = try {
+        appContext.contentResolver.openInputStream(uri)?.use { stream ->
+            val head = ByteArray(4)
+            val n = stream.read(head)
+            if (n == 4 && head[0] == 'P'.code.toByte() && head[1] == 'K'.code.toByte() && head[2].toInt() == 3 && head[3].toInt() == 4) {
+                "zip" to null
+            } else {
+                val out = ByteArrayOutputStream()
+                if (n > 0) out.write(head, 0, n)
+                val buffer = ByteArray(8 * 1024)
+                var total = n.coerceAtLeast(0)
+                var tooBig = false
+                while (true) {
+                    val r = stream.read(buffer)
+                    if (r < 0) break
+                    total += r
+                    if (total > OrderExchange.MAX_CHARS) {
+                        tooBig = true
+                        break
+                    }
+                    out.write(buffer, 0, r)
+                }
+                if (tooBig) "other" to null else "text" to String(out.toByteArray(), Charsets.UTF_8)
+            }
+        } ?: ("other" to null)
+    } catch (e: Exception) {
+        "other" to null
+    }
+
+    private fun applyIncomingUpdate(text: String): ImportResult {
+        val incoming = try {
+            DataCodec.decodeOrderUpdate(text)
+        } catch (e: Exception) {
+            notice = "فایل وضعیت سفارش معتبر نیست."
+            return ImportResult(false, "invalid update")
+        }
+        val local = data.orders.firstOrNull { it.id == incoming.clientOrderId }
+        if (local == null) {
+            notice = "سفارش مربوط به این فایل روی این گوشی پیدا نشد."
+            return ImportResult(false, "order not found")
+        }
+        val updated = OrderExchange.applyUpdate(local, incoming)
+        update { d -> d.copy(orders = d.orders.map { if (it.id == updated.id) updated else it }) }
+        rebuildInventory()
+        notice = "وضعیت سفارش ${local.number} به‌روز شد: ${FaLabels.status(updated.status)}" +
+            if (!updated.trackingCode.isNullOrBlank()) " — کد رهگیری ${updated.trackingCode}" else ""
+        return ImportResult(true, "ok")
+    }
 
     // ---------- catalogue ----------
 

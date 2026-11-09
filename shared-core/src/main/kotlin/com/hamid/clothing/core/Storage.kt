@@ -71,6 +71,106 @@ object DataCodec {
         )
     }
 
+    // ---------- order exchange files (customer app <-> admin app) ----------
+
+    /** "order", "order-update" or null when the text is not one of our exchange files. */
+    fun exchangeKind(text: String): String? =
+        try {
+            val o = JSONObject(text)
+            if (o.optInt("version", 0) == VERSION) o.optString("kind", "").ifBlank { null } else null
+        } catch (e: Exception) {
+            null
+        }
+
+    fun encodeOrderFile(f: OrderFile): String {
+        val o = JSONObject()
+        o.put("version", VERSION)
+        o.put("kind", "order")
+        o.put("clientOrderId", f.clientOrderId)
+        o.put("clientNumber", f.clientNumber)
+        o.put("createdAt", f.createdAt)
+        o.put("customerName", f.customerName)
+        o.put("customerPhone", f.customerPhone)
+        o.put("receiverName", f.receiverName)
+        o.put("receiverPhone", f.receiverPhone)
+        o.put("address", f.address)
+        o.put("paymentMethod", f.paymentMethod.name)
+        o.put("shippingMethod", f.shippingMethod.name)
+        o.put("note", f.note)
+        o.put("lines", jsonArray(f.lines) { l ->
+            val j = JSONObject()
+            j.put("productId", l.productId)
+            j.put("productName", l.productName)
+            j.put("color", l.color)
+            j.put("size", l.size)
+            j.put("quantity", l.quantity)
+            j.put("unitPrice", l.unitPrice)
+            j
+        })
+        return o.toString()
+    }
+
+    fun decodeOrderFile(text: String): OrderFile {
+        require(text.length <= OrderExchange.MAX_CHARS) { "order file is too large" }
+        val o = JSONObject(text)
+        require(o.optInt("version", 0) == VERSION && o.optString("kind", "") == "order") { "not an order file" }
+        fun clip(s: String) = s.trim().take(OrderExchange.MAX_TEXT)
+        val lines = o.optJSONArray("lines").objects {
+            val qty = it.getInt("quantity")
+            require(qty in 1..OrderExchange.MAX_QUANTITY) { "bad quantity" }
+            OrderFileLine(
+                clip(it.getString("productId")), clip(it.optString("productName", "")), clip(it.getString("color")),
+                clip(it.getString("size")), qty, it.optLong("unitPrice", 0L).coerceAtLeast(0L)
+            )
+        }
+        require(lines.isNotEmpty() && lines.size <= OrderExchange.MAX_LINES) { "bad number of lines" }
+        return OrderFile(
+            clientOrderId = clip(o.getString("clientOrderId")),
+            clientNumber = clip(o.optString("clientNumber", "")),
+            createdAt = o.optLong("createdAt", 0L),
+            customerName = clip(o.optString("customerName", "")),
+            customerPhone = clip(o.optString("customerPhone", "")),
+            receiverName = clip(o.optString("receiverName", "")),
+            receiverPhone = clip(o.optString("receiverPhone", "")),
+            address = clip(o.optString("address", "")),
+            paymentMethod = enumOf(o.optString("paymentMethod", ""), PaymentMethod.CARD_TO_CARD),
+            shippingMethod = enumOf(o.optString("shippingMethod", ""), ShippingMethod.COURIER),
+            lines = lines,
+            note = clip(o.optString("note", ""))
+        )
+    }
+
+    fun encodeOrderUpdate(u: OrderUpdateFile): String {
+        val o = JSONObject()
+        o.put("version", VERSION)
+        o.put("kind", "order-update")
+        o.put("clientOrderId", u.clientOrderId)
+        o.put("adminNumber", u.adminNumber)
+        o.put("status", u.status.name)
+        o.put("paidAmount", u.paidAmount)
+        o.put("total", u.total)
+        o.put("shippingCost", u.shippingCost)
+        if (u.trackingCode != null) o.put("trackingCode", u.trackingCode)
+        o.put("at", u.at)
+        return o.toString()
+    }
+
+    fun decodeOrderUpdate(text: String): OrderUpdateFile {
+        require(text.length <= OrderExchange.MAX_CHARS) { "update file is too large" }
+        val o = JSONObject(text)
+        require(o.optInt("version", 0) == VERSION && o.optString("kind", "") == "order-update") { "not an order update" }
+        return OrderUpdateFile(
+            clientOrderId = o.getString("clientOrderId").take(OrderExchange.MAX_TEXT),
+            adminNumber = o.optString("adminNumber", "").take(OrderExchange.MAX_TEXT),
+            status = enumOf(o.getString("status"), OrderStatus.NEW),
+            paidAmount = o.optLong("paidAmount", 0L).coerceAtLeast(0L),
+            total = o.optLong("total", 0L).coerceAtLeast(0L),
+            shippingCost = o.optLong("shippingCost", 0L).coerceAtLeast(0L),
+            trackingCode = o.nullableString("trackingCode")?.take(OrderExchange.MAX_TEXT),
+            at = o.optLong("at", 0L)
+        )
+    }
+
     // ---------- published catalog (what customers receive) ----------
 
     fun encodeCatalog(c: CatalogData): String {
@@ -353,6 +453,8 @@ object DataCodec {
         j.put("receiverName", o.receiverName)
         j.put("receiverPhone", o.receiverPhone)
         j.put("address", o.address)
+        if (o.externalRef.isNotBlank()) j.put("externalRef", o.externalRef)
+        if (o.note.isNotBlank()) j.put("note", o.note)
         j.put("items", jsonArray(o.items) { i ->
             val x = JSONObject()
             x.put("productId", i.productId)
@@ -407,7 +509,9 @@ object DataCodec {
         },
         receiverName = j.optString("receiverName", ""),
         receiverPhone = j.optString("receiverPhone", ""),
-        address = j.optString("address", "")
+        address = j.optString("address", ""),
+        externalRef = j.optString("externalRef", ""),
+        note = j.optString("note", "")
     )
 
     // ---------- supplier, bank, cheque, expense, settings ----------

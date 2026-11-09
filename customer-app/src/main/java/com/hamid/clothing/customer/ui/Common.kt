@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -79,15 +78,6 @@ fun formatToman(amount: Long): String = PersianFormat.money(amount) + " توما
 fun faInt(n: Int): String = PersianFormat.digits(n.toString())
 fun faDigits(s: String): String = PersianFormat.digits(s)
 
-private val LuxuryBurgundyBrush = Brush.horizontalGradient(
-    colors = listOf(
-        BurgundyDeep,
-        Burgundy,
-        BurgundyBright,
-        Color(0xFF5A122B)
-    )
-)
-
 fun toast(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }
@@ -106,6 +96,40 @@ fun shareText(context: Context, text: String) {
         context.startActivity(Intent.createChooser(send, "ارسال").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (e: Exception) {
         toast(context, "اشتراک‌گذاری ممکن نشد")
+    }
+}
+
+/** The shop's app. When it is installed on this phone, orders can be sent straight to it. */
+const val ADMIN_PACKAGE = "com.hamid.clothing.admin"
+
+fun sendFile(context: Context, file: java.io.File, mime: String, targetPackage: String?, title: String) {
+    try {
+        val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(mime)
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (targetPackage != null) {
+            try {
+                context.startActivity(Intent(send).setPackage(targetPackage).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (e: ActivityNotFoundException) {
+                // the shop's app is not on this phone: open the share sheet
+            }
+        }
+        context.startActivity(Intent.createChooser(send, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        toast(context, "ارسال فایل ممکن نشد")
+    }
+}
+
+/** Sends an order as a file: directly to the shop's app on this phone, or through any messenger. */
+fun sendOrderFile(context: Context, store: CustomerStore, orderId: String, direct: Boolean) {
+    val file = store.orderFileFor(orderId)
+    if (file == null) {
+        toast(context, "فایل سفارش ساخته نشد")
+    } else {
+        sendFile(context, file, "application/octet-stream", if (direct) ADMIN_PACKAGE else null, "ارسال سفارش به فروشگاه")
     }
 }
 
@@ -156,7 +180,7 @@ fun rememberCatalogImporter(store: CustomerStore): () -> Unit {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             scope.launch {
-                val result = store.importCatalog(uri)
+                val result = store.importIncoming(uri)
                 if (!result.ok) toast(context, result.message)
             }
         }
@@ -171,16 +195,15 @@ fun SoftCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(26.dp)
+    val shape = RoundedCornerShape(24.dp)
     val colors = CardDefaults.cardColors(containerColor = color)
-    val elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    val border = BorderStroke(1.dp, Gold.copy(alpha = 0.14f))
+    val elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     if (onClick != null) {
-        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
+        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, elevation = elevation) {
             Column(content = content)
         }
     } else {
-        Card(modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
+        Card(modifier = modifier, shape = shape, colors = colors, elevation = elevation) {
             Column(content = content)
         }
     }
@@ -191,19 +214,11 @@ fun GoldButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier,
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(52.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.White),
-        contentPadding = PaddingValues(0.dp)
+        colors = ButtonDefaults.buttonColors(containerColor = Gold, contentColor = GoldInk)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LuxuryBurgundyBrush, RoundedCornerShape(18.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text, color = Color.White, fontWeight = FontWeight.Bold)
-        }
+        Text(text, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -352,19 +367,8 @@ fun ProductCard(
     val quote: PriceQuote = store.quoteFor(product)
     val favorite = store.isFavorite(product.id)
     SoftCard(modifier = modifier, onClick = onClick) {
-        Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
-            ProductArt(store, product, Modifier.fillMaxWidth().height(196.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Transparent, Ink.copy(alpha = 0.20f))
-                        )
-                    )
-            )
+        Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+            ProductArt(store, product, Modifier.fillMaxWidth().height(180.dp))
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.92f),
@@ -390,7 +394,7 @@ fun ProductCard(
                         color = Color.White,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }

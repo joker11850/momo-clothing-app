@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -107,30 +108,36 @@ fun PublishScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit)
                 }
             }
 
-            Button(
-                onClick = {
-                    building = true
-                    error = null
-                    scope.launch {
-                        val built = withContext(Dispatchers.IO) {
-                            try {
-                                store.buildCatalogFile()
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }
-                        building = false
-                        if (built == null) {
-                            error = "ساخت فایل کاتالوگ ناموفق بود"
-                        } else {
-                            last = built
-                            shareFile(context, built.file, "application/zip", "ارسال کاتالوگ")
+            fun publish(direct: Boolean) {
+                building = true
+                error = null
+                scope.launch {
+                    val built = withContext(Dispatchers.IO) {
+                        try {
+                            store.buildCatalogFile()
+                        } catch (e: Exception) {
+                            null
                         }
                     }
-                },
+                    building = false
+                    if (built == null) {
+                        error = "ساخت فایل کاتالوگ ناموفق بود"
+                    } else {
+                        last = built
+                        sendFile(context, built.file, "application/zip", if (direct) CUSTOMER_PACKAGE else null, "ارسال کاتالوگ")
+                    }
+                }
+            }
+            Button(
+                onClick = { publish(direct = true) },
                 enabled = !building && data.products.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(if (building) "در حال ساخت فایل…" else "ساخت و ارسال کاتالوگ") }
+            ) { Text(if (building) "در حال ساخت فایل…" else "ارسال مستقیم به اپ مشتری (روی همین گوشی)") }
+            OutlinedButton(
+                onClick = { publish(direct = false) },
+                enabled = !building && data.products.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("ساخت و ارسال با پیام‌رسان (برای مشتری‌ها)") }
             if (data.products.isEmpty()) {
                 Text("کالای فعالی برای انتشار وجود ندارد.", color = Muted, style = MaterialTheme.typography.bodySmall)
             }

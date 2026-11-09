@@ -419,6 +419,7 @@ fun OrderDetailScreen(store: AdminStore, padding: PaddingValues, orderId: String
                 if (order.receiverPhone.isNotBlank()) InfoRow("تماس", PersianFormat.digits(order.receiverPhone))
                 if (order.address.isNotBlank()) InfoRow("آدرس", order.address)
                 if (!order.trackingCode.isNullOrBlank()) InfoRow("کد رهگیری", order.trackingCode ?: "")
+                if (order.note.isNotBlank()) InfoRow("یادداشت", order.note)
             }
 
             AdminCard {
@@ -489,6 +490,16 @@ fun OrderDetailScreen(store: AdminStore, padding: PaddingValues, orderId: String
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("فاکتور تصویری (ارسال برای مشتری)") }
+            if (order.externalRef.isNotBlank()) {
+                OutlinedButton(
+                    onClick = {
+                        val file = store.statusFileFor(order.id)
+                        if (file == null) toast(context, "فایل وضعیت ساخته نشد")
+                        else sendFile(context, file, "application/octet-stream", CUSTOMER_PACKAGE, "ارسال وضعیت به مشتری")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("ارسال وضعیت سفارش به مشتری") }
+            }
             OutlinedButton(
                 onClick = {
                     shareText(context, InvoiceText.build(order, customerName, store.settings.shopName.ifBlank { "فروشگاه" }))
