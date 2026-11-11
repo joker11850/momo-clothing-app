@@ -58,7 +58,7 @@ fun ScreenHeader(
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (onBack != null) {
@@ -85,14 +85,15 @@ fun AdminCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = CardDefaults.cardColors(containerColor = SurfaceDark)
-    val shape = RoundedCornerShape(16.dp)
-    val border = BorderStroke(1.dp, OutlineDark)
+    val shape = RoundedCornerShape(20.dp)
+    val border = BorderStroke(1.dp, Gold.copy(alpha = 0.18f))
+    val elevation = CardDefaults.cardElevation(defaultElevation = 4.dp, pressedElevation = 2.dp)
     if (onClick != null) {
-        Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) {
+        Card(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border, elevation = elevation) {
             Column(modifier = Modifier.padding(14.dp), content = content)
         }
     } else {
-        Card(modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border) {
+        Card(modifier = modifier.fillMaxWidth(), shape = shape, colors = colors, border = border, elevation = elevation) {
             Column(modifier = Modifier.padding(14.dp), content = content)
         }
     }

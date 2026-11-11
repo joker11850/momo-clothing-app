@@ -495,7 +495,7 @@ fun OrderDetailScreen(store: AdminStore, padding: PaddingValues, orderId: String
                     onClick = {
                         val file = store.statusFileFor(order.id)
                         if (file == null) toast(context, "فایل وضعیت ساخته نشد")
-                        else sendFile(context, file, "application/octet-stream", CUSTOMER_PACKAGE, "ارسال وضعیت به مشتری")
+                        else shareFile(context, file, "application/octet-stream", "ارسال وضعیت به مشتری")
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("ارسال وضعیت سفارش به مشتری") }

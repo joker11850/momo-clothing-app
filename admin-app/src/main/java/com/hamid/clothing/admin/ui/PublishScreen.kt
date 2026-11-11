@@ -108,7 +108,7 @@ fun PublishScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit)
                 }
             }
 
-            fun publish(direct: Boolean) {
+            fun publish() {
                 building = true
                 error = null
                 scope.launch {
@@ -124,20 +124,15 @@ fun PublishScreen(store: AdminStore, padding: PaddingValues, onBack: () -> Unit)
                         error = "ساخت فایل کاتالوگ ناموفق بود"
                     } else {
                         last = built
-                        sendFile(context, built.file, "application/zip", if (direct) CUSTOMER_PACKAGE else null, "ارسال کاتالوگ")
+                        shareFile(context, built.file, "application/zip", "ارسال کاتالوگ")
                     }
                 }
             }
             Button(
-                onClick = { publish(direct = true) },
+                onClick = { publish() },
                 enabled = !building && data.products.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(if (building) "در حال ساخت فایل…" else "ارسال مستقیم به اپ مشتری (روی همین گوشی)") }
-            OutlinedButton(
-                onClick = { publish(direct = false) },
-                enabled = !building && data.products.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("ساخت و ارسال با پیام‌رسان (برای مشتری‌ها)") }
+            ) { Text(if (building) "در حال ساخت فایل…" else "ساخت و ارسال کاتالوگ") }
             if (data.products.isEmpty()) {
                 Text("کالای فعالی برای انتشار وجود ندارد.", color = Muted, style = MaterialTheme.typography.bodySmall)
             }

@@ -47,7 +47,7 @@ import com.hamid.clothing.customer.CustomerStore
 import com.hamid.clothing.customer.StoreConfig
 
 private const val LOCAL_NOTICE =
-    "سفارش‌ها فعلاً فقط روی همین گوشی ذخیره می‌شوند. بعد از ثبت، سفارش را با دکمه‌های «ارسال سفارش» به‌صورت فایل برای فروشگاه بفرستید؛ فروشنده بعد از بررسی، وضعیت را برایتان برمی‌گرداند."
+    "سفارش‌ها فعلاً فقط روی همین گوشی ذخیره می‌شوند. بعد از ثبت، سفارش را با دکمه‌ی «ارسال سفارش برای فروشگاه»، سفارش را به‌صورت فایل برای فروشگاه بفرستید؛ فروشنده بعد از بررسی، وضعیت را برایتان برمی‌گرداند."
 
 @Composable
 fun CartScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
@@ -286,14 +286,10 @@ fun OrderDoneScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, orde
         }
 
         GoldButton(
-            "ارسال مستقیم به اپ فروشنده (همین گوشی)",
-            onClick = { sendOrderFile(context, store, order.id, direct = true) },
+            "ارسال سفارش برای فروشگاه",
+            onClick = { sendOrderFile(context, store, order.id) },
             modifier = Modifier.fillMaxWidth()
         )
-        OutlinedButton(
-            onClick = { sendOrderFile(context, store, order.id, direct = false) },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("ارسال سفارش برای فروشگاه با پیام‌رسان") }
         OutlinedButton(onClick = { nav.replace(Screen.OrderDetail(order.id)) }, modifier = Modifier.fillMaxWidth()) { Text("مشاهده‌ی سفارش و فاکتور") }
         OutlinedButton(onClick = { nav.tab(Screen.Home) }, modifier = Modifier.fillMaxWidth()) { Text("بازگشت به خانه") }
     }

@@ -365,14 +365,10 @@ fun OrderDetailScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, or
             }
 
             GoldButton(
-                "ارسال مستقیم به اپ فروشنده (همین گوشی)",
-                onClick = { sendOrderFile(context, store, order.id, direct = true) },
+                "ارسال سفارش برای فروشگاه",
+                onClick = { sendOrderFile(context, store, order.id) },
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedButton(
-                onClick = { sendOrderFile(context, store, order.id, direct = false) },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("ارسال سفارش برای فروشگاه با پیام‌رسان") }
             if (order.paymentMethod == PaymentMethod.CARD_TO_CARD && order.status == OrderStatus.AWAITING_PAYMENT) {
                 OutlinedButton(onClick = { nav.go(Screen.BankInfo) }, modifier = Modifier.fillMaxWidth()) { Text("حساب‌های فروشگاه برای پرداخت") }
             }
