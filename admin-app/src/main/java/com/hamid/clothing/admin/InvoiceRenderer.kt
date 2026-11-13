@@ -52,7 +52,7 @@ object InvoiceRenderer {
 
     private fun line(color: Int = LINE): Paint = Paint().also { it.color = color; it.strokeWidth = 2f }
 
-    fun render(model: InvoiceModel): Bitmap {
+    fun render(model: InvoiceModel, logo: Bitmap? = null): Bitmap {
         val blocks = mutableListOf<Block>()
         val body = paint(30f, INK)
         val bodyBold = paint(30f, INK, bold = true)
@@ -61,20 +61,27 @@ object InvoiceRenderer {
 
         // ---- shop name and invoice number
         run {
-            val rightW = (CONTENT * 0.62f).toInt()
-            val leftW = CONTENT - rightW - 24
+            val logoSize = if (logo != null) 112 else 0
+            val logoGap = if (logo != null) 20 else 0
+            val rightW = (CONTENT * 0.62f).toInt() - logoSize - logoGap
+            val leftW = CONTENT - (CONTENT * 0.62f).toInt() - 24
             val name = layout(model.shopName, paint(56f, INK, bold = true), rightW)
             val shopLines = model.shopLines.map { layout(it, small, rightW) }
             val number = layout("شماره: " + model.number, bodyBold, leftW)
             val date = layout("تاریخ: " + model.date, body, leftW)
             val rightH = name.height + 8 + shopLines.sumOf { it.height + 4 }
             val leftH = number.height + 8 + date.height
-            blocks.add(Block(maxOf(rightH, leftH) + 24) { c, top ->
+            blocks.add(Block(maxOf(rightH, leftH, logoSize) + 24) { c, top ->
                 var y = top.toFloat()
-                drawLayout(c, name, (WIDTH - MARGIN - rightW).toFloat(), y)
+                val textRight = WIDTH - MARGIN - logoSize - logoGap
+                if (logo != null) {
+                    val dst = RectF((WIDTH - MARGIN - logoSize).toFloat(), top.toFloat(), (WIDTH - MARGIN).toFloat(), (top + logoSize).toFloat())
+                    c.drawBitmap(logo, null, dst, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+                }
+                drawLayout(c, name, (textRight - rightW).toFloat(), y)
                 y += name.height + 8
                 for (l in shopLines) {
-                    drawLayout(c, l, (WIDTH - MARGIN - rightW).toFloat(), y)
+                    drawLayout(c, l, (textRight - rightW).toFloat(), y)
                     y += l.height + 4
                 }
                 drawLayout(c, number, MARGIN.toFloat(), top.toFloat())
@@ -193,7 +200,12 @@ object InvoiceRenderer {
         dir.listFiles()?.forEach { it.delete() }
         val safe = model.number.replace(Regex("[^A-Za-z0-9._-]"), "_")
         val file = File(dir, "invoice-$safe.png")
-        val bitmap = render(model)
+        val logo = try {
+            android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.brand_logo)
+        } catch (e: Exception) {
+            null
+        }
+        val bitmap = render(model, logo)
         try {
             file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         } finally {

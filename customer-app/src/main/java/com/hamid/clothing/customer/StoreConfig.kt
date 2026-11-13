@@ -8,8 +8,8 @@ import com.hamid.clothing.core.ShippingMethod
  * Leave a value empty to hide that channel (the app shows "not set up yet").
  */
 object StoreConfig {
-    const val STORE_NAME = "فروشگاه پوشاک"
-    const val BRAND_LETTER = "پ"
+    const val STORE_NAME = "پوشاک MOMO"
+    const val BRAND_LETTER = "M"
     const val TAGLINE = "فروشگاه آنلاین پوشاک"
 
     // Contact channels. Usernames without @ ; WhatsApp number in international form without +, e.g. 989121234567

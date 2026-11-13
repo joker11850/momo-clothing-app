@@ -1,4 +1,4 @@
-# Clothing Store Suite
+# Clothing Store Suite — پوشاک MOMO
 
 سامانه فروش پوشاک شامل دو اپ اندرویدی مستقل (Kotlin + Jetpack Compose + Material 3):
 

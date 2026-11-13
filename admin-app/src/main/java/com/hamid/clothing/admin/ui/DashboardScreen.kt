@@ -2,6 +2,14 @@
 
 package com.hamid.clothing.admin.ui
 
+import com.hamid.clothing.admin.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -63,8 +71,21 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("مدیریت فروشگاه", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text("نمای کلی وضعیت فروشگاه", style = MaterialTheme.typography.bodyMedium, color = Muted)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Image(
+                    painter = painterResource(R.drawable.brand_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
+                )
+                Column {
+                    Text(
+                        store.settings.shopName.ifBlank { "پوشاک MOMO" },
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text("مدیریت فروشگاه", style = MaterialTheme.typography.bodyMedium, color = Muted)
+                }
+            }
         }
 
         if (store.isSample) {

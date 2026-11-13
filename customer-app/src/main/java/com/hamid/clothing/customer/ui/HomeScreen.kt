@@ -2,6 +2,7 @@
 
 package com.hamid.clothing.customer.ui
 
+import com.hamid.clothing.customer.R
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -256,11 +257,11 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(shape = CircleShape, color = Burgundy, modifier = Modifier.size(46.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(store.info.brandLetter, color = Gold, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
-                }
-            }
+            Image(
+                painter = painterResource(R.drawable.brand_logo),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp))
+            )
             Column(modifier = Modifier.padding(start = 10.dp)) {
                 Text(store.info.name, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = Burgundy)
                 Text(store.info.tagline, style = MaterialTheme.typography.labelSmall, color = Muted)
