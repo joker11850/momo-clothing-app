@@ -219,12 +219,11 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
         item {
             PromoBanner(
-                "telegram", "کانال تلگرام ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
-                if (store.info.telegram.isEmpty()) "به‌زودی" else "t.me/" + store.info.telegram,
-                listOf(Color(0xFF123A6B), Color(0xFF1F5FA8))
+                "bale", "کانال بله ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
+                "@poshak_momo",
+                listOf(Color(0xFF007F71), Color(0xFF00A896))
             ) {
-                if (store.info.telegram.isEmpty()) toast(context, "لینک تلگرام هنوز تنظیم نشده است")
-                else openUrl(context, "https://t.me/" + store.info.telegram)
+                openUrl(context, "https://ble.ir/poshak_momo")
             }
         }
     }
