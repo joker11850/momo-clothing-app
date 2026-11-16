@@ -37,6 +37,7 @@ data class StoreInfo(
                 tagline = StoreConfig.TAGLINE,
                 address = published?.address ?: "",
                 phone = pick(published?.phone, StoreConfig.PHONE_NUMBER),
+                phone2 = StoreConfig.PHONE_NUMBER_2,
                 whatsapp = pick(published?.whatsapp, StoreConfig.WHATSAPP_NUMBER),
                 telegram = pick(published?.telegram, StoreConfig.TELEGRAM_USER),
                 instagram = pick(published?.instagram, StoreConfig.INSTAGRAM_USER),
