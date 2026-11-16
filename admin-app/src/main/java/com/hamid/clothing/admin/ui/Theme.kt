@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.hamid.clothing.admin.ThemeMode
-val Burgundy = Color(0xFF6E1835)
-val BurgundyDeep = Color(0xFF461024)
+val Burgundy = Color(0xFFFF4652)
+val BurgundyDeep = Color(0xFF4A123B)
 
 /** Colors of one theme. Screens read them through the Gold, Muted, ... properties below. */
 class Palette(
@@ -42,30 +42,30 @@ class Palette(
 
 val DarkPalette = Palette(
     dark = true,
-    gold = Color(0xFFE0B866),
-    text = Color(0xFFF2EBDD),
-    muted = Color(0xFFA8A29A),
-    bg = Color(0xFF0F0E0D),
-    surface = Color(0xFF1A1816),
-    surfaceHigh = Color(0xFF28231F),
-    danger = Color(0xFFE57373),
-    success = Color(0xFF7FC48A),
-    outline = Color(0xFF453C33),
-    errorBg = Color(0xFF3A1F1F)
+    gold = Color(0xFFFFB38A),
+    text = Color(0xFFFFF8F3),
+    muted = Color(0xFFD3BFC7),
+    bg = Color(0xFF24141F),
+    surface = Color(0xFF351B2C),
+    surfaceHigh = Color(0xFF4A123B),
+    danger = Color(0xFFFF7882),
+    success = Color(0xFF72C49A),
+    outline = Color(0xFF6A4058),
+    errorBg = Color(0xFF542333)
 )
 
 val LightPalette = Palette(
     dark = false,
-    gold = Color(0xFF9A6B16),
-    text = Color(0xFF211A14),
-    muted = Color(0xFF756A5E),
-    bg = Color(0xFFF5F0E8),
-    surface = Color(0xFFFFFCF7),
-    surfaceHigh = Color(0xFFF0E6D7),
-    danger = Color(0xFFC0392B),
-    success = Color(0xFF2E7D4F),
-    outline = Color(0xFFE0D4C2),
-    errorBg = Color(0xFFFBE3E0)
+    gold = Color(0xFFFF4652),
+    text = Color(0xFF281D27),
+    muted = Color(0xFF887B80),
+    bg = Color(0xFFFFF8F3),
+    surface = Color(0xFFFFFFFF),
+    surfaceHigh = Color(0xFFFFE8DE),
+    danger = Color(0xFFC73645),
+    success = Color(0xFF2E9B74),
+    outline = Color(0xFFF0D5CF),
+    errorBg = Color(0xFFFFE1E4)
 )
 
 val LocalPalette = staticCompositionLocalOf { DarkPalette }
