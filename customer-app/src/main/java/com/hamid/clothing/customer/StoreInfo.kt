@@ -10,6 +10,7 @@ data class StoreInfo(
     val tagline: String,
     val address: String,
     val phone: String,
+    val phone2: String,
     val whatsapp: String,
     val telegram: String,
     val instagram: String,

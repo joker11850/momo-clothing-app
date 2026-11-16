@@ -14,12 +14,13 @@ object StoreConfig {
 
     // Contact channels. Usernames without @ ; WhatsApp number in international form without +, e.g. 989121234567
     const val PHONE_NUMBER = "09372228071"
-    const val WHATSAPP_NUMBER = "09372228071"
-    const val TELEGRAM_USER = "09372228071"
+    const val PHONE_NUMBER_2 = "09132275597"
+    const val WHATSAPP_NUMBER = "@poshak_momo"
+    const val TELEGRAM_USER = "@hamid11850"
     const val INSTAGRAM_USER = ""
-    const val ROBIKA_USER = "09372228071"
-    const val EITAA_USER = "09372228071"
-    const val BALE_USER = "09372228071"
+    const val ROBIKA_USER = "@ham11850"
+    const val EITAA_USER = "@hamid11850"
+    const val BALE_USER = "@hamid11850"
 
     // Shipping costs in Toman. 0 means "announced by the shop after the order".
     const val COURIER_COST = 0L

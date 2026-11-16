@@ -32,14 +32,16 @@ private data class ContactChannel(val key: String, val title: String, val handle
 fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
     val info = store.info
+    fun clean(value: String): String = value.trim().removePrefix("@")
     val channels = listOf(
-        ContactChannel("phone", "تماس تلفنی", info.phone, "tel:" + info.phone),
-        ContactChannel("whatsapp", "واتساپ", info.whatsapp, "https://wa.me/" + info.whatsapp),
-        ContactChannel("telegram", "تلگرام", info.telegram, "https://t.me/" + info.telegram),
-        ContactChannel("instagram", "اینستاگرام", info.instagram, "https://instagram.com/" + info.instagram),
-        ContactChannel("rubika", "روبیکا", info.rubika, "https://rubika.ir/" + info.rubika),
-        ContactChannel("eitaa", "ایتا", info.eitaa, "https://eitaa.com/" + info.eitaa),
-        ContactChannel("bale", "بله", info.bale, "https://ble.ir/" + info.bale)
+        ContactChannel("phone", "تماس تلفنی", info.phone, "tel:" + clean(info.phone)),
+        ContactChannel("phone", "تماس تلفنی", info.phone2, "tel:" + clean(info.phone2)),
+        ContactChannel("whatsapp", "واتساپ", info.whatsapp, "https://wa.me/" + clean(info.whatsapp)),
+        ContactChannel("telegram", "تلگرام", info.telegram, "https://t.me/" + clean(info.telegram)),
+        ContactChannel("instagram", "اینستاگرام", info.instagram, "https://instagram.com/" + clean(info.instagram)),
+        ContactChannel("rubika", "روبیکا", info.rubika, "https://rubika.ir/" + clean(info.rubika)),
+        ContactChannel("eitaa", "ایتا", info.eitaa, "https://eitaa.com/" + clean(info.eitaa)),
+        ContactChannel("bale", "بله", info.bale, "https://ble.ir/" + clean(info.bale))
     )
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenTitle("تماس با ما")
