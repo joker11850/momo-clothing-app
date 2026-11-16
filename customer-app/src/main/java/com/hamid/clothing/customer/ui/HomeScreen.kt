@@ -112,6 +112,29 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             }
         }
 
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                CompactSocialCard(
+                    tag = "instagram",
+                    title = "اینستاگرام ما",
+                    handle = if (store.info.instagram.isEmpty()) "به‌زودی" else "@" + store.info.instagram,
+                    colors = listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (store.info.instagram.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
+                    else openUrl(context, "https://instagram.com/" + store.info.instagram)
+                }
+                CompactSocialCard(
+                    tag = "bale",
+                    title = "کانال بله ما",
+                    handle = "@poshak_momo",
+                    colors = listOf(Color(0xFF007F71), Color(0xFF00A896)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    openUrl(context, "https://ble.ir/poshak_momo")
+                }
+            }
+        }
         item { HeroPager(nav) }
 
         item {
@@ -207,25 +230,6 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
         item { WholesaleBanner(nav, store) }
 
-        item {
-            PromoBanner(
-                "instagram", "صفحه‌ی اینستاگرام ما", "هر روز استایل‌ها و مدل‌های تازه",
-                if (store.info.instagram.isEmpty()) "به‌زودی" else "@" + store.info.instagram,
-                listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63))
-            ) {
-                if (store.info.instagram.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
-                else openUrl(context, "https://instagram.com/" + store.info.instagram)
-            }
-        }
-        item {
-            PromoBanner(
-                "bale", "کانال بله ما", "اولین نفر از موجودی و تخفیف‌ها باخبر شوید",
-                "@poshak_momo",
-                listOf(Color(0xFF007F71), Color(0xFF00A896))
-            ) {
-                openUrl(context, "https://ble.ir/poshak_momo")
-            }
-        }
     }
 }
 
@@ -466,6 +470,29 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
                 if (store.customer?.canSeeWholesale == true) "شما عضو عمده هستید" else "درخواست عضویت عمده",
                 onClick = { if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale)) }
             )
+        }
+    }
+}
+
+@Composable
+private fun CompactSocialCard(
+    tag: String,
+    title: String,
+    handle: String,
+    colors: List<Color>,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    SoftCard(modifier = modifier.height(112.dp), color = Color.Transparent, onClick = onClick) {
+        Box(modifier = Modifier.fillMaxSize().background(Brush.linearGradient(colors)).padding(12.dp)) {
+            BrandIcon(tag, Modifier.align(Alignment.TopEnd), size = 30.dp)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.align(Alignment.BottomStart).padding(end = 38.dp)
+            ) {
+                Text(title, color = Color.White, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                Text(handle, color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            }
         }
     }
 }
