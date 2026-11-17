@@ -61,11 +61,13 @@ fun ShopScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, categoryI
     var category by remember(categoryId) { mutableStateOf(categoryId) }
     var sort by remember { mutableStateOf(0) }
 
-    val found = CatalogSearch.products(store.products, text, category, false)
-    val visible = when (sort) {
-        1 -> found.sortedBy { store.quoteFor(it).unitPrice }
-        2 -> found.sortedByDescending { store.quoteFor(it).unitPrice }
-        else -> found.reversed()
+    val visible = remember(store.products, text, category, sort, store.customer, store.catalogDate) {
+        val found = CatalogSearch.products(store.products, text, category, false)
+        when (sort) {
+            1 -> found.sortedBy { store.quoteFor(it).unitPrice }
+            2 -> found.sortedByDescending { store.quoteFor(it).unitPrice }
+            else -> found.asReversed()
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -84,7 +86,7 @@ fun ShopScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, categoryI
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item { FilterChip(selected = category == null, onClick = { category = null }, label = { Text("همه") }) }
-            items(store.categories, key = { it.id }) { c ->
+            items(store.categories, key = { it.id }, contentType = { "category-chip" }) { c ->
                 FilterChip(
                     selected = category == c.id,
                     onClick = { category = if (category == c.id) null else c.id },
@@ -107,7 +109,7 @@ fun ShopScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, categoryI
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(visible, key = { it.id }) { p ->
+            items(visible, key = { it.id }, contentType = { "product-card" }) { p ->
                 ProductCard(store, p, Modifier.fillMaxWidth()) { nav.go(Screen.ProductDetail(p.id)) }
             }
         }
@@ -126,7 +128,7 @@ fun FavoritesScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(favorites, key = { it.id }) { p ->
+            items(favorites, key = { it.id }, contentType = { "product-card" }) { p ->
                 ProductCard(store, p, Modifier.fillMaxWidth()) { nav.go(Screen.ProductDetail(p.id)) }
             }
         }

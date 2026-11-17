@@ -16,6 +16,8 @@ import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+private val ImageDecodeDispatcher = Dispatchers.IO.limitedParallelism(2)
+
 private object ImageCache {
     private const val MAX_BYTES = 32 * 1024 * 1024
     val cache = object : LruCache<String, ImageBitmap>(MAX_BYTES) {
@@ -30,8 +32,12 @@ private fun decode(file: File, maxPx: Int): ImageBitmap? {
     if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
     var sample = 1
     while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxPx) sample *= 2
-    val options = BitmapFactory.Options().apply { inSampleSize = sample }
-    return BitmapFactory.decodeFile(file.path, options)?.asImageBitmap()
+    val options = BitmapFactory.Options().apply {
+        inSampleSize = sample
+        inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888
+        inScaled = false
+    }
+    return runCatching { BitmapFactory.decodeFile(file.path, options)?.asImageBitmap() }.getOrNull()
 }
 
 /** Shows a photo from a file, decoding it off the main thread. [placeholder] is shown until it is ready or when missing. */
@@ -39,7 +45,7 @@ private fun decode(file: File, maxPx: Int): ImageBitmap? {
 fun LocalImage(
     file: File?,
     modifier: Modifier = Modifier,
-    maxPx: Int = 600,
+    maxPx: Int = 360,
     contentScale: ContentScale = ContentScale.Crop,
     placeholder: @Composable () -> Unit = {}
 ) {
@@ -50,7 +56,7 @@ fun LocalImage(
     val key = file.path + "|" + file.lastModified() + "|" + maxPx
     val image by produceState<ImageBitmap?>(ImageCache.cache.get(key), key) {
         if (value == null) {
-            value = withContext(Dispatchers.IO) { decode(file, maxPx)?.also { ImageCache.cache.put(key, it) } }
+            value = withContext(ImageDecodeDispatcher) { decode(file, maxPx)?.also { ImageCache.cache.put(key, it) } }
         }
     }
     val bitmap = image

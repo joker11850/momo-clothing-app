@@ -77,8 +77,10 @@ private data class Slide(val title: String, val subtitle: String, val cta: Strin
 fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
     val importCatalog = rememberCatalogImporter(store)
-    val specials = store.products.filter { store.quoteFor(it).discountPercent > 0 }
-    val newest = store.products.reversed().take(8)
+    val specials = remember(store.products, store.customer, store.catalogDate) {
+        store.products.filter { store.quoteFor(it).discountPercent > 0 }
+    }
+    val newest = remember(store.products) { store.products.asReversed().take(8) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(padding),
@@ -160,7 +162,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         item { SectionHeader("دسته‌بندی محصولات") }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                items(store.categories, key = { it.id }) { c ->
+                items(store.categories, key = { it.id }, contentType = { "category" }) { c ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.width(92.dp)
@@ -203,7 +205,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 ) {
                     SectionHeader("فروش ویژه هفته", "پیشنهادهای محدود", "مشاهده همه") { nav.go(Screen.Shop()) }
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(specials, key = { it.id }) { p ->
+                        items(specials, key = { it.id }, contentType = { "product-card" }) { p ->
                             ProductCard(store, p, Modifier.width(170.dp)) { nav.go(Screen.ProductDetail(p.id)) }
                         }
                     }
@@ -214,7 +216,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         item { SectionHeader("کالکشن جدید", "تازه‌ترین مدل‌های فروشگاه", "مشاهده همه") { nav.go(Screen.Shop()) } }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(newest, key = { it.id }) { p ->
+                items(newest, key = { it.id }, contentType = { "product-card" }) { p ->
                     ProductCard(store, p, Modifier.width(170.dp)) { nav.go(Screen.ProductDetail(p.id)) }
                 }
             }

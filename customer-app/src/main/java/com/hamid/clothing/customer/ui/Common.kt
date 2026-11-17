@@ -67,6 +67,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hamid.clothing.core.PersianFormat
 import com.hamid.clothing.core.Product
@@ -151,7 +152,7 @@ private val Palettes = listOf(
 
 /** Photo from the imported catalogue, then p_<code> in drawables, then a soft gradient with an icon. */
 @Composable
-fun ProductArt(store: CustomerStore, product: Product, modifier: Modifier = Modifier, maxPx: Int = 500) {
+fun ProductArt(store: CustomerStore, product: Product, modifier: Modifier = Modifier, maxPx: Int = 360) {
     val photo = store.coverFile(product)
     if (photo != null) {
         LocalImage(photo, modifier, maxPx) { ArtPlaceholder(product.code, product.id, Modifier.fillMaxSize()) }
@@ -194,18 +195,19 @@ fun SoftCard(
     modifier: Modifier = Modifier,
     color: Color = CardColor,
     onClick: (() -> Unit)? = null,
+    elevation: Dp = 4.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val shape = RoundedCornerShape(26.dp)
     val colors = CardDefaults.cardColors(containerColor = color)
-    val elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    val cardElevation = CardDefaults.cardElevation(defaultElevation = elevation)
     val border = BorderStroke(1.dp, Gold.copy(alpha = 0.14f))
     if (onClick != null) {
-        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
+        Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, border = border, elevation = cardElevation) {
             Column(content = content)
         }
     } else {
-        Card(modifier = modifier, shape = shape, colors = colors, border = border, elevation = elevation) {
+        Card(modifier = modifier, shape = shape, colors = colors, border = border, elevation = cardElevation) {
             Column(content = content)
         }
     }
@@ -376,7 +378,7 @@ fun ProductCard(
 ) {
     val quote: PriceQuote = store.quoteFor(product)
     val favorite = store.isFavorite(product.id)
-    SoftCard(modifier = modifier, onClick = onClick) {
+    SoftCard(modifier = modifier, onClick = onClick, elevation = 1.dp) {
         Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
             ProductArt(store, product, Modifier.fillMaxWidth().height(196.dp))
             Box(
