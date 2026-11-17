@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.hamid.clothing.customer.CustomerStore
 import com.hamid.clothing.customer.R
 import kotlinx.coroutines.delay
@@ -143,24 +146,29 @@ fun CustomerApp(store: CustomerStore) {
 @Composable
 private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
     val colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = Burgundy,
+        selectedIconColor = Color.White,
         selectedTextColor = Burgundy,
-        indicatorColor = RoseLight,
+        indicatorColor = Color.Transparent,
         unselectedIconColor = Muted,
         unselectedTextColor = Muted
     )
+    val homeColor = Color(0xFFFF4652)
+    val shopColor = Color(0xFF7B3FF2)
+    val cartColor = Color(0xFFFF8A3D)
+    val accountColor = Color(0xFF3B82F6)
+    val contactColor = Color(0xFF00A896)
     NavigationBar(containerColor = CardColor) {
         NavigationBarItem(
             selected = current is Screen.Home,
             onClick = { nav.tab(Screen.Home) },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
+            icon = { ColorfulNavIcon(Icons.Default.Home, current is Screen.Home, homeColor, "خانه") },
             label = { Text("خانه") },
             colors = colors
         )
         NavigationBarItem(
             selected = current is Screen.Shop,
             onClick = { nav.tab(Screen.Shop()) },
-            icon = { Icon(Icons.Default.ShoppingBag, contentDescription = null) },
+            icon = { ColorfulNavIcon(Icons.Default.ShoppingBag, current is Screen.Shop, shopColor, "فروشگاه") },
             label = { Text("فروشگاه") },
             colors = colors
         )
@@ -168,9 +176,13 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
             selected = current is Screen.Cart,
             onClick = { nav.tab(Screen.Cart) },
             icon = {
-                BadgedBox(badge = { if (store.cartCount > 0) Badge { Text(faInt(store.cartCount)) } }) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null)
-                }
+                ColorfulNavIcon(
+                    icon = Icons.Default.ShoppingCart,
+                    selected = current is Screen.Cart,
+                    color = cartColor,
+                    description = "سبد خرید",
+                    badge = store.cartCount.takeIf { it > 0 }
+                )
             },
             label = { Text("سبد خرید") },
             colors = colors
@@ -178,16 +190,42 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
         NavigationBarItem(
             selected = current is Screen.Account,
             onClick = { nav.tab(Screen.Account) },
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+            icon = { ColorfulNavIcon(Icons.Default.Person, current is Screen.Account, accountColor, "حساب من") },
             label = { Text("حساب من") },
             colors = colors
         )
         NavigationBarItem(
             selected = current is Screen.Contact,
             onClick = { nav.tab(Screen.Contact) },
-            icon = { Icon(Icons.Default.Phone, contentDescription = null) },
+            icon = { ColorfulNavIcon(Icons.Default.Phone, current is Screen.Contact, contactColor, "تماس") },
             label = { Text("تماس") },
             colors = colors
         )
+    }
+}
+
+@Composable
+private fun ColorfulNavIcon(
+    icon: ImageVector,
+    selected: Boolean,
+    color: Color,
+    description: String,
+    badge: Int? = null
+) {
+    Surface(
+        shape = CircleShape,
+        color = if (selected) color else color.copy(alpha = 0.13f),
+        modifier = Modifier.size(38.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            BadgedBox(badge = { if (badge != null) Badge { Text(faInt(badge)) } }) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = description,
+                    tint = if (selected) Color.White else color,
+                    modifier = Modifier.size(21.dp)
+                )
+            }
+        }
     }
 }

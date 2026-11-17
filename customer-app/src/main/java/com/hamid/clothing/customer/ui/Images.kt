@@ -1,5 +1,9 @@
 package com.hamid.clothing.customer.ui
 
+import android.app.ActivityManager
+import android.content.ComponentCallbacks2
+import android.content.Context
+import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.util.LruCache
 import androidx.compose.foundation.Image
@@ -19,12 +23,63 @@ import kotlinx.coroutines.withContext
 private val ImageDecodeDispatcher = Dispatchers.IO.limitedParallelism(2)
 
 private object ImageCache {
-    private const val MAX_BYTES = 32 * 1024 * 1024
-    val cache = object : LruCache<String, ImageBitmap>(MAX_BYTES) {
+    private const val MIN_BYTES = 12 * 1024 * 1024
+    private const val DEFAULT_BYTES = 24 * 1024 * 1024
+    private const val LARGE_BYTES = 48 * 1024 * 1024
+    private var maxBytes = DEFAULT_BYTES
+    private var cache = createCache(maxBytes)
+
+    private fun createCache(limit: Int) = object : LruCache<String, ImageBitmap>(limit) {
         override fun sizeOf(key: String, value: ImageBitmap): Int = value.width * value.height * 4
+    }
+
+    @Synchronized fun configure(context: Context) {
+        val memoryClassMb = (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)
+            ?.memoryClass ?: 128
+        val target = when {
+            memoryClassMb <= 128 -> MIN_BYTES
+            memoryClassMb >= 512 -> LARGE_BYTES
+            else -> DEFAULT_BYTES
+        }
+        if (target != maxBytes) {
+            maxBytes = target
+            cache.evictAll()
+            cache = createCache(maxBytes)
+        }
+    }
+
+    @Synchronized fun get(key: String): ImageBitmap? = cache.get(key)
+
+    @Synchronized fun put(key: String, value: ImageBitmap) {
+        cache.put(key, value)
+    }
+
+    @Synchronized fun trim(level: Int) {
+        when {
+            level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> cache.evictAll()
+            level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> cache.trimToSize(maxBytes / 2)
+            level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> cache.trimToSize(maxBytes / 3)
+        }
     }
 }
 
+private var imageMemoryCallbacksRegistered = false
+
+/** Registers one process-wide memory callback for the customer app image cache. */
+fun installImageMemoryCallbacks(context: Context) {
+    if (imageMemoryCallbacksRegistered) return
+    synchronized(ImageCache) {
+        if (imageMemoryCallbacksRegistered) return
+        val appContext = context.applicationContext
+        ImageCache.configure(appContext)
+        appContext.registerComponentCallbacks(object : ComponentCallbacks2 {
+            override fun onTrimMemory(level: Int) = ImageCache.trim(level)
+            override fun onConfigurationChanged(newConfig: Configuration) = Unit
+            override fun onLowMemory() = ImageCache.trim(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL)
+        })
+        imageMemoryCallbacksRegistered = true
+    }
+}
 private fun decode(file: File, maxPx: Int): ImageBitmap? {
     if (!file.isFile) return null
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -54,9 +109,9 @@ fun LocalImage(
         return
     }
     val key = file.path + "|" + file.lastModified() + "|" + maxPx
-    val image by produceState<ImageBitmap?>(ImageCache.cache.get(key), key) {
+    val image by produceState<ImageBitmap?>(ImageCache.get(key), key) {
         if (value == null) {
-            value = withContext(ImageDecodeDispatcher) { decode(file, maxPx)?.also { ImageCache.cache.put(key, it) } }
+            value = withContext(ImageDecodeDispatcher) { decode(file, maxPx)?.also { ImageCache.put(key, it) } }
         }
     }
     val bitmap = image

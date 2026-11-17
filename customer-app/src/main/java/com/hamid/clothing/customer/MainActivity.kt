@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.hamid.clothing.customer.ui.CustomerApp
 import com.hamid.clothing.customer.ui.CustomerTheme
+import com.hamid.clothing.customer.ui.installImageMemoryCallbacks
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installImageMemoryCallbacks(applicationContext)
         store = CustomerStore(applicationContext)
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
