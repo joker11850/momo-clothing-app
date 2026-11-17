@@ -74,6 +74,7 @@ sealed interface Screen {
     data object Reports : Screen
     data object Settings : Screen
     data object Publish : Screen
+    data object Notifications : Screen
     data object Backup : Screen
 }
 
@@ -135,6 +136,7 @@ fun AdminApp(store: AdminStore) {
                 onOpenReports = { nav.go(Screen.Reports) },
                 onOpenSettings = { nav.go(Screen.Settings) },
                 onOpenPublish = { nav.go(Screen.Publish) },
+                onOpenNotifications = { nav.go(Screen.Notifications) },
                 onOpenBackup = { nav.go(Screen.Backup) }
             )
             is Screen.Orders -> OrdersScreen(
@@ -256,6 +258,7 @@ fun AdminApp(store: AdminStore) {
             Screen.Reports -> ReportsScreen(store, padding) { nav.back() }
             Screen.Settings -> SettingsScreen(store, padding) { nav.back() }
             Screen.Publish -> PublishScreen(store, padding) { nav.back() }
+            Screen.Notifications -> NotificationsScreen(store, padding) { nav.back() }
             Screen.Backup -> BackupScreen(store, padding) { nav.back() }
         }
     }

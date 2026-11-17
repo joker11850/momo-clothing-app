@@ -44,6 +44,8 @@ import com.hamid.clothing.core.OrderBuilder
 import com.hamid.clothing.core.OrderProcessor
 import com.hamid.clothing.core.OrderResult
 import com.hamid.clothing.core.OrderStatus
+import com.hamid.clothing.core.NotificationCodec
+import com.hamid.clothing.core.NotificationDraft
 import com.hamid.clothing.core.PartyLedger
 import com.hamid.clothing.core.PaymentMethod
 import com.hamid.clothing.core.Product
@@ -96,6 +98,10 @@ class AdminStore(context: Context) {
     var lastBackupAt by mutableStateOf(prefs.getLong("last_backup_at", 0L))
         private set
 
+    /** Draft waiting for the future server/FCM transport. */
+    var pendingNotification by mutableStateOf(loadPendingNotification())
+        private set
+
     var snapshot by mutableStateOf(StoreSnapshot())
         private set
 
@@ -130,6 +136,24 @@ class AdminStore(context: Context) {
 
     fun dismissNotice() {
         notice = null
+    }
+
+    private fun loadPendingNotification(): NotificationDraft? = try {
+        prefs.getString("notification_pending", null)?.let(NotificationCodec::decode)
+    } catch (_: Exception) {
+        null
+    }
+
+    /** Stores a server-ready payload locally until the notification API is connected. */
+    fun queueNotification(title: String, body: String) {
+        val draft = NotificationDraft(title = title.trim().take(120), body = body.trim().take(2000))
+        prefs.edit().putString("notification_pending", NotificationCodec.encode(draft)).apply()
+        pendingNotification = draft
+    }
+
+    fun clearQueuedNotification() {
+        prefs.edit().remove("notification_pending").apply()
+        pendingNotification = null
     }
 
     // ---------- loading / saving ----------

@@ -48,6 +48,7 @@ fun DashboardScreen(
     onOpenReports: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenPublish: () -> Unit,
+    onOpenNotifications: () -> Unit,
     onOpenBackup: () -> Unit
 ) {
     val now = System.currentTimeMillis()
@@ -209,6 +210,16 @@ fun DashboardScreen(
                 Text("انتشار کاتالوگ برای مشتریان", fontWeight = FontWeight.Bold, color = Gold)
                 Text(
                     if (store.lastPublishedAt > 0) "آخرین انتشار: ${faDate(store.lastPublishedAt)}" else "هنوز کاتالوگی منتشر نشده است",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Muted
+                )
+            }
+        }
+        item {
+            AdminCard(onClick = onOpenNotifications) {
+                Text("اطلاع‌رسانی به مشتریان", fontWeight = FontWeight.Bold, color = Gold)
+                Text(
+                    if (store.pendingNotification != null) "یک پیام در صف اتصال به سرور است" else "ساخت پیام برای اعلان درون‌برنامه‌ای و پوش",
                     style = MaterialTheme.typography.bodySmall,
                     color = Muted
                 )

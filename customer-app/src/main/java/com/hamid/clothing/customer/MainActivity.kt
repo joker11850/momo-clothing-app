@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installImageMemoryCallbacks(applicationContext)
+        NotificationSetup.ensureChannel(applicationContext)
         store = CustomerStore(applicationContext)
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
