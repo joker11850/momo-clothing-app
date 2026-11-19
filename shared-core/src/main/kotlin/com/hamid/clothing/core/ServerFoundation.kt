@@ -61,3 +61,21 @@ data class ServerFeatureFlags(
     val notificationsEnabled: Boolean = false,
     val campaignsEnabled: Boolean = false
 )
+
+
+data class ChatMessage(
+    val id: String,
+    val conversationId: String,
+    val sender: String,
+    val text: String,
+    val createdAt: Long,
+    val read: Boolean = false
+)
+
+data class ChatConversation(
+    val id: String,
+    val customerId: String?,
+    val subject: String = "پشتیبانی فروشگاه",
+    val updatedAt: Long,
+    val unreadCount: Int = 0
+)

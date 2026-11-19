@@ -89,8 +89,9 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
                 MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
                 MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
                 MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
+            MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
+            MenuRow("چت با فروشگاه") { nav.go(Screen.SupportChat) }
             MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
-                MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
             }
             return@Column
         }
@@ -140,6 +141,9 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
             MenuRow("عضویت عمده", customer.wholesaleStatus.fa()) { nav.go(Screen.Wholesale) }
             MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
             MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
+            MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
+            MenuRow("چت با فروشگاه") { nav.go(Screen.SupportChat) }
+            MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
             OutlinedButton(onClick = { confirmLogout = true }, modifier = Modifier.fillMaxWidth()) { Text("خروج از حساب", color = Danger) }
             Box(modifier = Modifier.height(24.dp))
         }
