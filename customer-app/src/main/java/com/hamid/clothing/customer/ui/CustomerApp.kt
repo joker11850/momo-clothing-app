@@ -68,6 +68,7 @@ sealed interface Screen {
     data object Contact : Screen
     data object Notifications : Screen
     data object BrandStory : Screen
+    data object Privacy : Screen
 }
 
 /** Tiny back stack: tabs replace the whole stack, other screens are pushed. */
@@ -155,6 +156,7 @@ fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
             Screen.Contact -> ContactScreen(store, nav, padding)
             Screen.Notifications -> NotificationInboxScreen(nav, padding)
             Screen.BrandStory -> BrandStoryScreen(nav, padding)
+            Screen.Privacy -> PrivacyScreen(nav, padding)
         }
     }
 

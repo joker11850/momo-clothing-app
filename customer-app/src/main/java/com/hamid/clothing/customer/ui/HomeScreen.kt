@@ -265,6 +265,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
                     if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
                 })
                 DropdownMenuItem(text = { Text("درباره MOMO") }, onClick = { menuOpen = false; nav.go(Screen.BrandStory) })
+                DropdownMenuItem(text = { Text("سیاست حفظ حریم خصوصی") }, onClick = { menuOpen = false; nav.go(Screen.Privacy) })
                 DropdownMenuItem(text = { Text("تماس با ما") }, onClick = { menuOpen = false; nav.tab(Screen.Contact) })
                 DropdownMenuItem(text = { Text("دریافت کاتالوگ فروشگاه") }, onClick = { menuOpen = false; onImport() })
             }
