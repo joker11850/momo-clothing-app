@@ -1,4 +1,4 @@
-name: Build Clothing Apps
+name: Build Clothing Apps (Release)
 
 on:
   push:
@@ -11,48 +11,37 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
-
       - name: Run shared-core unit tests
         run: gradle :shared-core:test
-
-      - name: Upload test report
-        if: failure()
+      - name: Build Release APKs
+        run: gradle :admin-app:assembleRelease :customer-app:assembleRelease
+      - name: Upload Admin Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: shared-core-test-report
-          path: shared-core/build/reports/tests/test
-
-      - name: Build both APKs
-        run: gradle :admin-app:assembleDebug :customer-app:assembleDebug
-
-      - name: Upload Admin APK
+          name: clothing-admin-release
+          path: admin-app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload Customer Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: clothing-admin-debug
-          path: admin-app/build/outputs/apk/debug/*.apk
-
-      - name: Upload Customer APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: clothing-customer-debug
-          path: customer-app/build/outputs/apk/debug/*.apk
+          name: clothing-customer-release
+          path: customer-app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 1
