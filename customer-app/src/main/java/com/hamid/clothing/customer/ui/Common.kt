@@ -111,6 +111,33 @@ fun shareText(context: Context, text: String) {
     }
 }
 
+/** Shares a product with a formatted Persian description and an optional product image. */
+fun shareProduct(context: Context, store: CustomerStore, product: Product, quote: PriceQuote, color: String = "", size: String = "") {
+    try {
+        val link = "momo://product/${Uri.encode(product.id)}"
+        val selections = listOf(color.takeIf { it.isNotBlank() }, size.takeIf { it.isNotBlank() }).filterNotNull().joinToString(" / ")
+        val text = buildString {
+            append("🛍 ${product.name}\n")
+            append("قیمت: ${formatToman(quote.unitPrice)}\n")
+            if (selections.isNotBlank()) append("انتخاب: $selections\n")
+            append("کد کالا: ${product.code}\n")
+            if (product.description.isNotBlank()) append("${product.description.take(220)}\n")
+            append("\nمشاهده و سفارش در اپ MOMO:\n$link")
+        }
+        val image = store.coverFile(product)?.takeIf { it.isFile }
+        val send = Intent(Intent.ACTION_SEND).setType(if (image != null) "image/*" else "text/plain").putExtra(Intent.EXTRA_TEXT, text)
+        if (image != null) {
+            val sharedDir = java.io.File(context.cacheDir, "shared").apply { mkdirs() }
+            val copy = java.io.File(sharedDir, "momo-${product.id.replace(Regex("[^A-Za-z0-9_-]"), "_")}.jpg")
+            image.inputStream().use { input -> copy.outputStream().use { output -> input.copyTo(output) } }
+            val uri = androidx.core.content.FileProvider.getUriForFile(context, context.packageName + ".files", copy)
+            send.putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(send, "اشتراک‌گذاری محصول").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        shareText(context, "${product.name}\n${formatToman(quote.unitPrice)}\nhttps://momo.app/product/${Uri.encode(product.id)}")
+    }
+}
 /** Opens the share sheet for a file (Telegram, Eitaa, Bale, WhatsApp...). */
 fun sendFile(context: Context, file: java.io.File, mime: String, title: String) {
     try {

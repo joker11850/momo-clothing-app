@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -186,7 +187,16 @@ fun ProductScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, produc
             Surface(
                 shape = CircleShape,
                 color = Color.White.copy(alpha = 0.92f),
-                modifier = Modifier.align(Alignment.TopEnd).padding(14.dp).size(42.dp).clickable { store.toggleFavorite(product.id) }
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = 14.dp, top = 14.dp).size(42.dp).clickable {
+                    shareProduct(context, store, product, quote, color, size)
+                }
+            ) {
+                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Share, contentDescription = "اشتراک‌گذاری", tint = Burgundy) }
+            }
+            Surface(
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.92f),
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = 66.dp, top = 14.dp).size(42.dp).clickable { store.toggleFavorite(product.id) }
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
