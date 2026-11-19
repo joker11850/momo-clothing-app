@@ -284,6 +284,7 @@ fun OrderDoneScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, orde
         SoftCard(color = Beige) {
             Text(LOCAL_NOTICE, style = MaterialTheme.typography.bodySmall, color = GoldInk, modifier = Modifier.padding(14.dp))
         }
+        ReceiptWarrantyCard(order) { shareDigitalReceipt(context, order) }
 
         GoldButton(
             "ارسال سفارش برای فروشگاه",

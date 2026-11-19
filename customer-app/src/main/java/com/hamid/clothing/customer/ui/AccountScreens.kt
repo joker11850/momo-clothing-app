@@ -357,6 +357,7 @@ fun OrderDetailScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, or
                     SummaryRow("مانده", formatToman(order.remaining))
                 }
             }
+            ReceiptWarrantyCard(order) { shareDigitalReceipt(context, order) }
             if (order.history.isNotEmpty()) {
                 SoftCard {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

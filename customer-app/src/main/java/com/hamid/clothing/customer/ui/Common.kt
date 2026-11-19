@@ -162,6 +162,29 @@ fun sendOrderFile(context: Context, store: CustomerStore, orderId: String) {
     }
 }
 
+/** Shares a customer-friendly digital receipt and MOMO warranty terms. */
+fun shareDigitalReceipt(context: Context, order: com.hamid.clothing.core.Order) {
+    val receipt = buildString {
+        append("رسید دیجیتال خرید MOMO\n")
+        append("شماره سفارش: ${order.number}\n")
+        append("تاریخ: ${PersianFormat.digits(com.hamid.clothing.core.JalaliCalendar.fromEpochMillis(order.createdAt).format())}\n")
+        append("وضعیت: ${com.hamid.clothing.core.FaLabels.status(order.status)}\n\n")
+        append("اقلام سفارش:\n")
+        order.items.forEach { item ->
+            append("• ${item.productName} | ${item.color} / ${item.size} | ${faInt(item.quantity)} عدد | ${formatToman(item.lineTotal)}\n")
+        }
+        append("\nجمع کالاها: ${formatToman(order.subtotal)}\n")
+        if (order.extraDiscount > 0) append("تخفیف: ${formatToman(order.extraDiscount)}\n")
+        append("هزینه ارسال: ${if (order.shippingCost > 0) formatToman(order.shippingCost) else "اعلام توسط فروشگاه"}\n")
+        append("مبلغ نهایی: ${formatToman(order.total)}\n")
+        append("پرداخت‌شده: ${formatToman(order.paidAmount)}\n\n")
+        append("ضمانت MOMO:\n")
+        append("این رسید، ضمانت اصالت و سلامت ظاهری کالا هنگام تحویل است. لطفاً کالا را هنگام دریافت بررسی کنید و رسید را برای پیگیری تعویض یا خدمات پس از فروش نگه دارید. شرایط تعویض مطابق قوانین فروشگاه MOMO است.\n\n")
+        append("تماس با MOMO: 09132275597")
+    }
+    shareText(context, receipt)
+}
+
 /** Looks up an optional image in res/drawable (for example banner_1 or p_sh_101). */
 @Composable
 fun drawableId(name: String): Int? {

@@ -137,6 +137,18 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 }
             }
         }
+        item {
+            SoftCard(color = RoseLight, onClick = { nav.go(Screen.BrandStory) }) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = Burgundy, modifier = Modifier.size(30.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("داستان MOMO", fontWeight = FontWeight.ExtraBold, color = Burgundy)
+                        Text("کیفیت، سلیقه و استایل ماندگار", style = MaterialTheme.typography.bodySmall, color = Muted)
+                    }
+                    Text("معرفی برند", color = Burgundy, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
         item { HeroPager(nav) }
 
         item {
@@ -252,6 +264,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
                     menuOpen = false
                     if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
                 })
+                DropdownMenuItem(text = { Text("درباره MOMO") }, onClick = { menuOpen = false; nav.go(Screen.BrandStory) })
                 DropdownMenuItem(text = { Text("تماس با ما") }, onClick = { menuOpen = false; nav.tab(Screen.Contact) })
                 DropdownMenuItem(text = { Text("دریافت کاتالوگ فروشگاه") }, onClick = { menuOpen = false; onImport() })
             }
