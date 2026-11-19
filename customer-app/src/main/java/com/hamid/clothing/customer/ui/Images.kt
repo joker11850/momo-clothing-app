@@ -24,8 +24,8 @@ private val ImageDecodeDispatcher = Dispatchers.IO.limitedParallelism(2)
 
 private object ImageCache {
     private const val MIN_BYTES = 12 * 1024 * 1024
-    private const val DEFAULT_BYTES = 24 * 1024 * 1024
-    private const val LARGE_BYTES = 48 * 1024 * 1024
+    private const val DEFAULT_BYTES = 20 * 1024 * 1024
+    private const val LARGE_BYTES = 36 * 1024 * 1024
     private var maxBytes = DEFAULT_BYTES
     private var cache = createCache(maxBytes)
 

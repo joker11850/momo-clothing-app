@@ -376,11 +376,13 @@ fun ProductCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val quote: PriceQuote = store.quoteFor(product)
+    val quote: PriceQuote = remember(product.id, store.customer, store.catalogDate) {
+        store.quoteFor(product)
+    }
     val favorite = store.isFavorite(product.id)
     SoftCard(modifier = modifier, onClick = onClick, elevation = 1.dp) {
         Box(modifier = Modifier.fillMaxWidth().height(196.dp)) {
-            ProductArt(store, product, Modifier.fillMaxWidth().height(196.dp))
+            ProductArt(store, product, Modifier.fillMaxWidth().height(196.dp), maxPx = 300)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

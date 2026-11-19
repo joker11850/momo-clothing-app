@@ -197,7 +197,6 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(32.dp))
-                        .shadow(7.dp, RoundedCornerShape(32.dp), ambientColor = Gold.copy(alpha = 0.10f), spotColor = Gold.copy(alpha = 0.16f))
                         .border(1.dp, Gold.copy(alpha = 0.16f), RoundedCornerShape(32.dp))
                         .background(Rose)
                         .padding(16.dp),
@@ -223,7 +222,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth().height(142.dp)) {
                 TrustCard("ارسال مطمئن", "بسته‌بندی استاندارد", Icons.Default.LocalShipping, BurgundyStyle, Modifier.weight(1f))
                 TrustCard("پشتیبانی سریع", "پاسخ در پیام‌رسان‌ها", Icons.Default.SupportAgent, EmeraldStyle, Modifier.weight(1f))
                 TrustCard("پرداخت آسان", "کارت‌به‌کارت و دفتری", Icons.Default.Payments, ChampagneStyle, Modifier.weight(1f))
@@ -304,7 +303,6 @@ private fun HeroPager(nav: Nav) {
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(28.dp))
-                    .shadow(10.dp, RoundedCornerShape(28.dp), ambientColor = Gold.copy(alpha = 0.16f), spotColor = Gold.copy(alpha = 0.22f))
                     .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(28.dp))
                     .background(Brush.linearGradient(s.colors))
             ) {
@@ -410,7 +408,6 @@ private fun TrustCard(title: String, subtitle: String, icon: ImageVector, style:
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .shadow(8.dp, shape, ambientColor = Gold.copy(alpha = 0.12f), spotColor = Gold.copy(alpha = 0.18f))
             .clip(shape)
             .background(Brush.linearGradient(style.colors))
             .border(1.dp, style.border, shape)
@@ -453,7 +450,6 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
-            .shadow(8.dp, RoundedCornerShape(28.dp), ambientColor = Gold.copy(alpha = 0.14f), spotColor = Gold.copy(alpha = 0.20f))
             .border(1.dp, Gold.copy(alpha = 0.28f), RoundedCornerShape(28.dp))
             .background(Brush.linearGradient(listOf(Color(0xFFF1DDB2), Color(0xFFD9B36A))))
     ) {
