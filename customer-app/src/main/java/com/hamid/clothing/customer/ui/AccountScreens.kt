@@ -69,7 +69,7 @@ private fun MenuRow(title: String, subtitle: String? = null, onClick: () -> Unit
 }
 
 @Composable
-fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
+fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onToggleDarkMode: () -> Unit = {}) {
     var confirmLogout by remember { mutableStateOf(false) }
     val customer = store.customer
     val importCatalog = rememberCatalogImporter(store)
@@ -89,6 +89,8 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
                 MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
                 MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
+            MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
+                MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
             }
             return@Column
         }

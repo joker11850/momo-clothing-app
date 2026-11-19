@@ -5,6 +5,11 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
@@ -24,9 +29,14 @@ class MainActivity : ComponentActivity() {
         NotificationSetup.ensureChannel(applicationContext)
         store = CustomerStore(applicationContext)
         setContent {
+            val preferences = getSharedPreferences("customer_preferences", MODE_PRIVATE)
+            var darkMode by remember { mutableStateOf(preferences.getBoolean("dark_mode", false)) }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                CustomerTheme {
-                    CustomerApp(store)
+                CustomerTheme(darkMode = darkMode) {
+                    CustomerApp(store, onToggleDarkMode = {
+                        darkMode = !darkMode
+                        preferences.edit().putBoolean("dark_mode", darkMode).apply()
+                    })
                 }
             }
         }

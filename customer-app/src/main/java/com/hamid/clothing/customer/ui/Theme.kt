@@ -3,6 +3,7 @@ package com.hamid.clothing.customer.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -46,9 +47,22 @@ private val CustomerTypography = Typography().run {
 }
 
 @Composable
-fun CustomerTheme(content: @Composable () -> Unit) {
+fun CustomerTheme(darkMode: Boolean = false, content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = lightColorScheme(
+        colorScheme = if (darkMode) darkColorScheme(
+            primary = BurgundyBright,
+            onPrimary = Color(0xFF2A1722),
+            secondary = Gold,
+            onSecondary = Color(0xFF2A1722),
+            background = Color(0xFF191318),
+            onBackground = Color(0xFFF8E9E5),
+            surface = Color(0xFF241B23),
+            onSurface = Color(0xFFF8E9E5),
+            surfaceVariant = Color(0xFF3A2734),
+            onSurfaceVariant = Color(0xFFD7C2C8),
+            outline = Color(0xFF684655),
+            error = Color(0xFFFF8A96)
+        ) else lightColorScheme(
             primary = Burgundy,
             onPrimary = Color.White,
             secondary = Gold,

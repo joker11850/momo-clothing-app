@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.Color
@@ -92,7 +93,8 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 }
 
 @Composable
-fun CustomerApp(store: CustomerStore) {
+fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
+    val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         delay(4000)
@@ -102,8 +104,27 @@ fun CustomerApp(store: CustomerStore) {
         MomoSplash()
         return
     }
-    val stack = remember { mutableStateListOf<Screen>(Screen.Home) }
+    val startScreen = remember {
+        when (context.getSharedPreferences("customer_preferences", android.content.Context.MODE_PRIVATE).getString("last_screen", "home")) {
+            "shop" -> Screen.Shop()
+            "cart" -> Screen.Cart
+            "account" -> Screen.Account
+            "contact" -> Screen.Contact
+            else -> Screen.Home
+        }
+    }
+    val stack = remember { mutableStateListOf<Screen>(startScreen) }
     val nav = remember { Nav(stack) }
+    androidx.compose.runtime.LaunchedEffect(nav.current) {
+        val key = when (nav.current) {
+            is Screen.Shop -> "shop"
+            Screen.Cart -> "cart"
+            Screen.Account -> "account"
+            Screen.Contact -> "contact"
+            else -> "home"
+        }
+        context.getSharedPreferences("customer_preferences", android.content.Context.MODE_PRIVATE).edit().putString("last_screen", key).apply()
+    }
     BackHandler(enabled = nav.canGoBack) { nav.back() }
 
     val current = nav.current
@@ -121,7 +142,7 @@ fun CustomerApp(store: CustomerStore) {
             Screen.Cart -> CartScreen(store, nav, padding)
             Screen.Checkout -> CheckoutScreen(store, nav, padding)
             is Screen.OrderDone -> OrderDoneScreen(store, nav, padding, current.orderId)
-            Screen.Account -> AccountScreen(store, nav, padding)
+            Screen.Account -> AccountScreen(store, nav, padding, onToggleDarkMode)
             is Screen.Login -> LoginScreen(store, nav, padding, current.next)
             Screen.Profile -> ProfileScreen(store, nav, padding)
             Screen.Orders -> OrdersScreen(store, nav, padding)
