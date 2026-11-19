@@ -18,8 +18,20 @@ android {
 
     buildFeatures { compose = true }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("MOMO_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("MOMO_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("MOMO_KEY_ALIAS")
+                keyPassword = System.getenv("MOMO_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

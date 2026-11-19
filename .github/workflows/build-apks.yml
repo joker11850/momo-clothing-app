@@ -29,7 +29,18 @@ jobs:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
       - name: Run shared-core unit tests
         run: gradle :shared-core:test
-      - name: Build Release APKs
+      - name: Prepare signing key
+        env:
+          MOMO_KEYSTORE_B64: ${{ secrets.MOMO_KEYSTORE_B64 }}
+        run: |
+          test -n "$MOMO_KEYSTORE_B64" || (echo "Missing MOMO_KEYSTORE_B64 repository secret" && exit 1)
+          echo "$MOMO_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/momo-upload-key.jks"
+      - name: Build signed Release APKs
+        env:
+          MOMO_KEYSTORE_PATH: ${{ runner.temp }}/momo-upload-key.jks
+          MOMO_KEYSTORE_PASSWORD: ${{ secrets.MOMO_KEYSTORE_PASSWORD }}
+          MOMO_KEY_ALIAS: ${{ secrets.MOMO_KEY_ALIAS }}
+          MOMO_KEY_PASSWORD: ${{ secrets.MOMO_KEY_PASSWORD }}
         run: gradle :admin-app:assembleRelease :customer-app:assembleRelease
       - name: Upload Admin Release APK
         uses: actions/upload-artifact@v4
