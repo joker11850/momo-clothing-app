@@ -95,11 +95,11 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 fun CustomerApp(store: CustomerStore) {
     var showSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        delay(1100)
+        delay(4000)
         showSplash = false
     }
     if (showSplash) {
-        MomoSplash("پوشاک MOMO", "فروشگاه آنلاین پوشاک")
+        MomoSplash()
         return
     }
     val stack = remember { mutableStateListOf<Screen>(Screen.Home) }
