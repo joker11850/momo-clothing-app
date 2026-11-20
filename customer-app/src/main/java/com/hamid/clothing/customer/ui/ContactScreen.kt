@@ -71,7 +71,7 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(c.title, fontWeight = FontWeight.ExtraBold)
                             Text(
-                                if (ready) faDigits(c.handle) else "تنظیم نشده",
+                                if (ready) "برای ارتباط لمس کنید" else "تنظیم نشده",
                                 color = if (ready) Burgundy else Muted,
                                 style = MaterialTheme.typography.bodySmall
                             )

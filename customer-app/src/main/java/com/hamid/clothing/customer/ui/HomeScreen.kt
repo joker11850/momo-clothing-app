@@ -119,7 +119,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 CompactSocialCard(
                     tag = "instagram",
                     title = "اینستاگرام ما",
-                    handle = if (store.info.instagram.isEmpty()) "به‌زودی" else "@" + store.info.instagram,
+                    handle = if (store.info.instagram.isEmpty()) "به‌زودی" else "برای مشاهده لمس کنید",
                     colors = listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63)),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -129,23 +129,11 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 CompactSocialCard(
                     tag = "bale",
                     title = "کانال بله ما",
-                    handle = "@poshak_momo",
+                    handle = "برای مشاهده لمس کنید",
                     colors = listOf(Color(0xFF007F71), Color(0xFF00A896)),
                     modifier = Modifier.weight(1f)
                 ) {
                     openUrl(context, "https://ble.ir/poshak_momo")
-                }
-            }
-        }
-        item {
-            SoftCard(color = RoseLight, onClick = { nav.go(Screen.BrandStory) }) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = Burgundy, modifier = Modifier.size(30.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("داستان MOMO", fontWeight = FontWeight.ExtraBold, color = Burgundy)
-                        Text("کیفیت، سلیقه و استایل ماندگار", style = MaterialTheme.typography.bodySmall, color = Muted)
-                    }
-                    Text("معرفی برند", color = Burgundy, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -242,6 +230,18 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         }
 
         item { WholesaleBanner(nav, store) }
+        item {
+            SoftCard(color = RoseLight, onClick = { nav.go(Screen.BrandStory) }) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = Burgundy, modifier = Modifier.size(30.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("داستان MOMO", fontWeight = FontWeight.ExtraBold, color = Burgundy)
+                        Text("کیفیت، سلیقه و استایل ماندگار", style = MaterialTheme.typography.bodySmall, color = Muted)
+                    }
+                    Text("معرفی برند", color = Burgundy, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
 
     }
 }
