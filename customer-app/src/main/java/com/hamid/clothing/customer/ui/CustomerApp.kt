@@ -98,6 +98,20 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 
 @Composable
 fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
+    var splashVisible by remember { mutableStateOf(true) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1100)
+        splashVisible = false
+    }
+    if (splashVisible) {
+        Image(
+            painter = painterResource(com.hamid.clothing.customer.R.drawable.momo_splash),
+            contentDescription = "اسپلش پوشاک MOMO",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        return
+    }
     val context = LocalContext.current
     val startScreen = remember {
         when (context.getSharedPreferences("customer_preferences", android.content.Context.MODE_PRIVATE).getString("last_screen", "home")) {
