@@ -253,7 +253,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
                 })
                 DropdownMenuItem(text = { Text("عضویت عمده") }, onClick = {
                     menuOpen = false
-                    if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
+                    nav.go(Screen.Wholesale)
                 })
                 DropdownMenuItem(text = { Text("درباره MOMO") }, onClick = { menuOpen = false; nav.go(Screen.BrandStory) })
                 DropdownMenuItem(text = { Text("سیاست حفظ حریم خصوصی") }, onClick = { menuOpen = false; nav.go(Screen.Privacy) })
@@ -471,7 +471,7 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
             )
             GoldButton(
                 if (store.customer?.canSeeWholesale == true) "شما عضو عمده هستید" else "درخواست عضویت عمده",
-                onClick = { if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale)) }
+                onClick = { nav.go(Screen.Wholesale) }
             )
         }
     }

@@ -240,7 +240,7 @@ fun ProductScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, produc
                             color = Muted
                         )
                         PillButton("درخواست عضویت عمده", {
-                            if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
+                            nav.go(Screen.Wholesale)
                         })
                     }
                 }
