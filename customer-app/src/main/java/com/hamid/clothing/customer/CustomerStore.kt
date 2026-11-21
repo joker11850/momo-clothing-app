@@ -395,14 +395,11 @@ class CustomerStore(context: Context) {
 
     /** Returns an error message, or null when the request was recorded. */
     fun requestWholesale(businessName: String, city: String, note: String): String? {
-        val c = data.customer ?: return "ابتدا وارد حساب کاربری شوید"
         if (businessName.trim().isEmpty()) return "نام فروشگاه یا کسب‌وکار را وارد کنید"
         val request = WholesaleRequest(businessName.trim(), city.trim(), note.trim(), now())
-        update {
-            it.copy(
-                customer = c.copy(type = CustomerType.WHOLESALE, wholesaleStatus = WholesaleStatus.PENDING),
-                wholesaleRequest = request
-            )
+        update { current ->
+            val customer = current.customer?.copy(type = CustomerType.WHOLESALE, wholesaleStatus = WholesaleStatus.PENDING)
+            current.copy(customer = customer, wholesaleRequest = request)
         }
         return null
     }

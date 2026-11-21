@@ -404,14 +404,6 @@ fun OrderDetailScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, or
 fun WholesaleScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val context = LocalContext.current
     val customer = store.customer
-    if (customer == null) {
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            ScreenTitle("عضویت عمده", onBack = { nav.back() })
-            EmptyState("برای درخواست عضویت عمده ابتدا وارد شوید.")
-            GoldButton("ورود", { nav.replace(Screen.Login(Screen.Wholesale)) }, Modifier.padding(horizontal = 32.dp).fillMaxWidth())
-        }
-        return
-    }
     var business by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
@@ -425,23 +417,22 @@ fun WholesaleScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             SoftCard(color = Beige) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text("وضعیت شما: ${customer.wholesaleStatus.fa()}", fontWeight = FontWeight.ExtraBold, color = GoldInk)
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("درخواست عضویت عمده", fontWeight = FontWeight.ExtraBold, color = GoldInk)
                     Text(
-                        "قیمت عمده، خرید دفتری و شرایط ویژه بعد از تأیید فروشنده فعال می‌شود.",
+                        "برای درخواست، شماره تلفن لازم نیست. پس از بررسی فروشگاه، تأیید عضویت و قیمت عمده از سمت مدیریت انجام می‌شود.",
                         style = MaterialTheme.typography.bodySmall,
                         color = GoldInk
                     )
                 }
             }
 
-            val status = customer.wholesaleStatus
-            if (status == WholesaleStatus.APPROVED && customer.type == CustomerType.WHOLESALE) {
-                Text("شما مشتری عمده‌ی تأییدشده هستید و قیمت‌های عمده را می‌بینید.", color = MintDark, fontWeight = FontWeight.Bold)
-            } else if (status == WholesaleStatus.PENDING && request != null) {
+            if (customer?.wholesaleStatus == WholesaleStatus.APPROVED && customer.type == CustomerType.WHOLESALE) {
+                Text("عضویت عمده شما تأیید شده است؛ قیمت‌های عمده برای حساب شما فعال است.", color = MintDark, fontWeight = FontWeight.Bold)
+            } else if (request != null && customer?.wholesaleStatus == WholesaleStatus.PENDING) {
                 SoftCard {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("درخواست ثبت‌شده", fontWeight = FontWeight.ExtraBold)
+                        Text("درخواست ثبت‌شده · در انتظار بررسی", fontWeight = FontWeight.ExtraBold)
                         Text("نام فروشگاه: ${request.businessName}")
                         if (request.city.isNotBlank()) Text("شهر: ${request.city}")
                         if (request.note.isNotBlank()) Text("توضیحات: ${request.note}")
@@ -449,15 +440,26 @@ fun WholesaleScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                     }
                 }
                 Text(
-                    "درخواست فعلاً فقط روی همین گوشی ثبت شده است. برای بررسی سریع‌تر آن را برای فروشگاه بفرستید.",
+                    "در حالت بدون سرور، درخواست روی همین گوشی ذخیره می‌شود و برای رسیدن به فروشگاه باید آن را به‌صورت دستی ارسال کنید.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Muted
                 )
                 GoldButton("ارسال درخواست برای فروشگاه", {
-                    shareText(
-                        context,
-                        "درخواست عضویت عمده\nنام: ${customer.fullName}\nموبایل: ${PersianFormat.digits(customer.phone)}\nفروشگاه: ${request.businessName}\nشهر: ${request.city}\nتوضیحات: ${request.note}"
-                    )
+                    shareText(context, "درخواست عضویت عمده MOMO\nنام فروشگاه: ${request.businessName}\nشهر: ${request.city}\nتوضیحات: ${request.note}\nزمان ثبت: ${faDate(request.at)}")
+                }, Modifier.fillMaxWidth())
+            } else if (request != null && customer == null) {
+                SoftCard {
+                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("درخواست عمده روی این گوشی ثبت شده", fontWeight = FontWeight.ExtraBold)
+                        Text("نام فروشگاه: ${request.businessName}")
+                        if (request.city.isNotBlank()) Text("شهر: ${request.city}")
+                        if (request.note.isNotBlank()) Text("توضیحات: ${request.note}")
+                        Text("ثبت: ${faDate(request.at)}", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Text("این درخواست هنوز به اپ مدیریت منتقل نشده است؛ برای ارسال دستی از دکمه زیر استفاده کنید.", style = MaterialTheme.typography.bodySmall, color = Muted)
+                GoldButton("ارسال درخواست برای فروشگاه", {
+                    shareText(context, "درخواست عضویت عمده MOMO\nنام فروشگاه: ${request.businessName}\nشهر: ${request.city}\nتوضیحات: ${request.note}\nزمان ثبت: ${faDate(request.at)}")
                 }, Modifier.fillMaxWidth())
             } else {
                 Field("نام فروشگاه یا کسب‌وکار", business, { business = it })
