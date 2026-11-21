@@ -46,7 +46,7 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         ContactChannel("phone", "تماس تلفنی", info.phone2, "tel:" + clean(info.phone2)),
         ContactChannel("whatsapp", "واتساپ", info.whatsapp, "https://wa.me/" + clean(info.whatsapp)),
         ContactChannel("telegram", "تلگرام", info.telegram, "https://t.me/" + clean(info.telegram)),
-        ContactChannel("instagram", "اینستاگرام", info.instagram, "https://instagram.com/" + clean(info.instagram)),
+        ContactChannel("instagram", "اینستاگرام", "poshake_momo", "https://instagram.com/poshake_momo"),
         ContactChannel("rubika", "روبیکا", info.rubika, "https://rubika.ir/" + clean(info.rubika)),
         ContactChannel("eitaa", "ایتا", info.eitaa, "https://eitaa.com/" + clean(info.eitaa)),
         ContactChannel("bale", "بله", info.bale, "https://ble.ir/" + clean(info.bale))

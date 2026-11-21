@@ -482,15 +482,7 @@ class CustomerStore(context: Context) {
         shipping: ShippingMethod,
         payment: PaymentMethod
     ): PlaceResult {
-        // Guest checkout: create a temporary retail identity for this local order.
-        // Guests cannot receive wholesale pricing or use store-credit payments.
-        val c = customer ?: Customer(
-            id = "guest-${newId()}",
-            fullName = receiverName.trim(),
-            phone = receiverPhone.trim(),
-            type = CustomerType.RETAIL,
-            wholesaleStatus = WholesaleStatus.NONE
-        )
+        val c = customer ?: return PlaceResult(listOf("ابتدا وارد حساب کاربری شوید"), null)
         val priced = pricedCart()
         val input = checkoutInput(
             c, receiverName, receiverPhone, address, shipping, payment,
@@ -508,7 +500,7 @@ class CustomerStore(context: Context) {
                     it.copy(
                         orders = it.orders + saved,
                         cart = emptyList(),
-                        customer = it.customer?.let { cur -> if (cur.fullName.isBlank()) cur.copy(fullName = saved.receiverName) else cur },
+                        customer = (it.customer ?: c).let { cur -> if (cur.fullName.isBlank()) cur.copy(fullName = saved.receiverName) else cur },
                         addresses = if (saved.address.isNotBlank() && saved.address !in it.addresses) it.addresses + saved.address else it.addresses
                     )
                 }

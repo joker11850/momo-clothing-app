@@ -123,7 +123,7 @@ fun CartScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             }
             GoldButton(
                 "ادامه و ثبت سفارش",
-                onClick = { nav.go(Screen.Checkout) },
+                onClick = { if (store.isLoggedIn) nav.go(Screen.Checkout) else nav.go(Screen.Login(Screen.Checkout)) },
                 enabled = !priced.hasStockProblem,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -143,9 +143,18 @@ fun SummaryRow(label: String, value: String, valueColor: androidx.compose.ui.gra
 @Composable
 fun CheckoutScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     val customer = store.customer
+    if (customer == null) {
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            ScreenTitle("ثبت سفارش", onBack = { nav.back() })
+            EmptyState("برای ثبت سفارش ابتدا وارد شوید.")
+            GoldButton("ورود", { nav.replace(Screen.Login(Screen.Checkout)) }, Modifier.padding(horizontal = 32.dp).fillMaxWidth())
+        }
+        return
+    }
+
     val priced = store.pricedCart()
-    var name by remember { mutableStateOf(customer?.fullName.orEmpty()) }
-    var phone by remember { mutableStateOf(customer?.phone.orEmpty()) }
+    var name by remember { mutableStateOf(customer.fullName) }
+    var phone by remember { mutableStateOf(customer.phone) }
     var address by remember { mutableStateOf(store.data.addresses.firstOrNull() ?: "") }
     var shipping by remember { mutableStateOf(ShippingMethod.COURIER) }
     var payment by remember { mutableStateOf(PaymentMethod.CARD_TO_CARD) }
