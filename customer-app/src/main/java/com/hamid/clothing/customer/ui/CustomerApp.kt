@@ -12,16 +12,19 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -175,50 +178,64 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
     val cartColor = Color(0xFFFF8A3D)
     val accountColor = Color(0xFF3B82F6)
     val contactColor = Color(0xFF00A896)
-    NavigationBar(containerColor = CardColor) {
-        NavigationBarItem(
-            selected = current is Screen.Home,
-            onClick = { nav.tab(Screen.Home) },
-            icon = { ColorfulNavIcon(Icons.Default.Home, current is Screen.Home, homeColor, "خانه") },
-            label = { Text("خانه") },
-            colors = colors
-        )
-        NavigationBarItem(
-            selected = current is Screen.Shop,
-            onClick = { nav.tab(Screen.Shop()) },
-            icon = { ColorfulNavIcon(Icons.Default.ShoppingBag, current is Screen.Shop, shopColor, "فروشگاه") },
-            label = { Text("فروشگاه") },
-            colors = colors
-        )
-        NavigationBarItem(
-            selected = current is Screen.Cart,
-            onClick = { nav.tab(Screen.Cart) },
-            icon = {
-                ColorfulNavIcon(
-                    icon = Icons.Default.ShoppingCart,
-                    selected = current is Screen.Cart,
-                    color = cartColor,
-                    description = "سبد خرید",
-                    badge = store.cartCount.takeIf { it > 0 }
-                )
-            },
-            label = { Text("سبد خرید") },
-            colors = colors
-        )
-        NavigationBarItem(
-            selected = current is Screen.Account,
-            onClick = { nav.tab(Screen.Account) },
-            icon = { ColorfulNavIcon(Icons.Default.Person, current is Screen.Account, accountColor, "حساب من") },
-            label = { Text("حساب من") },
-            colors = colors
-        )
-        NavigationBarItem(
-            selected = current is Screen.Contact,
-            onClick = { nav.tab(Screen.Contact) },
-            icon = { ColorfulNavIcon(Icons.Default.Phone, current is Screen.Contact, contactColor, "تماس") },
-            label = { Text("تماس") },
-            colors = colors
-        )
+    val glassShape = RoundedCornerShape(28.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .shadow(10.dp, glassShape, clip = false)
+            .clip(glassShape)
+            .background(CardColor.copy(alpha = 0.88f))
+            .border(1.dp, Gold.copy(alpha = 0.42f), glassShape)
+    ) {
+        NavigationBar(
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp
+        ) {
+            NavigationBarItem(
+                selected = current is Screen.Home,
+                onClick = { nav.tab(Screen.Home) },
+                icon = { ColorfulNavIcon(Icons.Default.Home, current is Screen.Home, homeColor, "خانه") },
+                label = { Text("خانه") },
+                colors = colors
+            )
+            NavigationBarItem(
+                selected = current is Screen.Shop,
+                onClick = { nav.tab(Screen.Shop()) },
+                icon = { ColorfulNavIcon(Icons.Default.ShoppingBag, current is Screen.Shop, shopColor, "فروشگاه") },
+                label = { Text("فروشگاه") },
+                colors = colors
+            )
+            NavigationBarItem(
+                selected = current is Screen.Cart,
+                onClick = { nav.tab(Screen.Cart) },
+                icon = {
+                    ColorfulNavIcon(
+                        icon = Icons.Default.ShoppingCart,
+                        selected = current is Screen.Cart,
+                        color = cartColor,
+                        description = "سبد خرید",
+                        badge = store.cartCount.takeIf { it > 0 }
+                    )
+                },
+                label = { Text("سبد خرید") },
+                colors = colors
+            )
+            NavigationBarItem(
+                selected = current is Screen.Account,
+                onClick = { nav.tab(Screen.Account) },
+                icon = { ColorfulNavIcon(Icons.Default.Person, current is Screen.Account, accountColor, "حساب من") },
+                label = { Text("حساب من") },
+                colors = colors
+            )
+            NavigationBarItem(
+                selected = current is Screen.Contact,
+                onClick = { nav.tab(Screen.Contact) },
+                icon = { ColorfulNavIcon(Icons.Default.Phone, current is Screen.Contact, contactColor, "تماس") },
+                label = { Text("تماس") },
+                colors = colors
+            )
+        }
     }
 }
 
