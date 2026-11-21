@@ -144,15 +144,6 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 QuickCard("جست‌وجو", "جست‌وجوی کالا", Icons.Default.Search, RoseLight, Burgundy, Modifier.weight(1f)) {
                     nav.tab(Screen.Shop())
                 }
-                if (store.isLoggedIn) {
-                    QuickCard("حساب من", "سفارش‌ها و مشخصات", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
-                        nav.tab(Screen.Account)
-                    }
-                } else {
-                    QuickCard("ورود و ثبت‌نام", "با شماره موبایل", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
-                        nav.go(Screen.Login(null))
-                    }
-                }
                 QuickCard("پشتیبانی", "پاسخگوی شما", Icons.Default.Headset, Mint, MintDark, Modifier.weight(1f)) {
                     nav.tab(Screen.Contact)
                 }
