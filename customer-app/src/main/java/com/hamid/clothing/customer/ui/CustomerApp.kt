@@ -36,7 +36,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -48,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hamid.clothing.customer.CustomerStore
 import com.hamid.clothing.customer.R
-import kotlinx.coroutines.delay
 
 sealed interface Screen {
     data object Home : Screen
@@ -98,15 +96,6 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 @Composable
 fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
     val context = LocalContext.current
-    var showSplash by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit) {
-        delay(3200)
-        showSplash = false
-    }
-    if (showSplash) {
-        MomoSplash()
-        return
-    }
     val startScreen = remember {
         when (context.getSharedPreferences("customer_preferences", android.content.Context.MODE_PRIVATE).getString("last_screen", "home")) {
             "shop" -> Screen.Shop()
