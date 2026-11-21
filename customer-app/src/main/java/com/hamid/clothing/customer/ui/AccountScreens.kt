@@ -78,20 +78,17 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
         ScreenTitle("حساب من")
         if (customer == null) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SoftCard(color = Beige) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("وارد حساب خود شوید", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
-                        Text("برای ثبت سفارش، دیدن سوابق خرید و عضویت عمده با شماره موبایل وارد شوید.", color = Muted)
-                        GoldButton("ورود و ثبت‌نام", { nav.go(Screen.Login(Screen.Account)) }, Modifier.fillMaxWidth())
-                    }
-                }
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
+                MenuRow("عضویت عمده", "ثبت درخواست بدون ورود به حساب") { nav.go(Screen.Wholesale) }
                 MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
                 MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
-            MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
-            MenuRow("سیاست حفظ حریم خصوصی", "نحوه استفاده و نگهداری اطلاعات") { nav.go(Screen.Privacy) }
-            MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
+                MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
+                MenuRow("سیاست حفظ حریم خصوصی", "نحوه استفاده و نگهداری اطلاعات") { nav.go(Screen.Privacy) }
+                MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
             }
             return@Column
         }
