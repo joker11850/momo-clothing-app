@@ -100,7 +100,7 @@ fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
     val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        delay(4000)
+        delay(3200)
         showSplash = false
     }
     if (showSplash) {

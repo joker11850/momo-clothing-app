@@ -1,115 +1,126 @@
 package com.hamid.clothing.customer.ui
 
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.hamid.clothing.customer.R
 import kotlin.math.roundToInt
 
-/** Single, soft animated splash for the customer app. The approved MOMO artwork is preserved. */
+/** Final MOMO customer splash. Admin has its own unchanged splash. */
 @Composable
-fun MomoSplash(title: String = "", subtitle: String = "") {
-    val entrance by animateFloatAsState(
+fun MomoSplash() {
+    val progress by animateFloatAsState(
         targetValue = 1f,
-        animationSpec = tween(1150, easing = FastOutSlowInEasing),
-        label = "momo entrance"
+        animationSpec = tween(3000, easing = FastOutSlowInEasing),
+        label = "splash progress"
     )
-    val motion = rememberInfiniteTransition(label = "momo logo motion")
-    val breathe by motion.animateFloat(
-        initialValue = 0.985f,
-        targetValue = 1.015f,
-        animationSpec = infiniteRepeatable(tween(1800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "momo breathing"
+    val letters = listOf(
+        Triple("پ", Color(0xFFFF4B98), 0),
+        Triple("و", Color(0xFFFFB83D), 180),
+        Triple("ش", Color(0xFF9B3DFF), 360),
+        Triple("ا", Color(0xFF39D6B0), 540),
+        Triple("ک", Color(0xFFFF6B72), 720)
     )
-    val drift by motion.animateFloat(
-        initialValue = -3f,
-        targetValue = 3f,
-        animationSpec = infiniteRepeatable(tween(2200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "momo drift"
-    )
-    val shine by motion.animateFloat(
-        initialValue = -1.3f,
-        targetValue = 1.5f,
-        animationSpec = infiniteRepeatable(tween(2100, easing = FastOutSlowInEasing), RepeatMode.Restart),
-        label = "momo shine"
-    )
-    val background = Brush.radialGradient(
-        colors = listOf(Color(0xFF34152E), Color(0xFF150A16), Color.Black),
-        radius = 980f
-    )
-    Box(Modifier.fillMaxSize().background(background), contentAlignment = Alignment.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF0A0212)),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
-            modifier = Modifier
-                .size(310.dp)
-                .offset { IntOffset(0, drift.roundToInt()) }
-                .graphicsLayer {
-                    alpha = entrance
-                    scaleX = breathe * (0.88f + entrance * 0.12f)
-                    scaleY = breathe * (0.88f + entrance * 0.12f)
-                }
-                .shadow(30.dp, RoundedCornerShape(56.dp), ambientColor = Color(0x66FF4652), spotColor = Color(0x99FFB38A))
-                .clip(RoundedCornerShape(56.dp)),
+            modifier = Modifier.fillMaxWidth().aspectRatio(719f / 749f),
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(R.drawable.brand_logo),
-                contentDescription = "لوگوی MOMO",
-                contentScale = ContentScale.Fit,
+                painter = painterResource(R.drawable.momo_splash_background),
+                contentDescription = "اسپلش MOMO",
+                contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
             )
-            // A narrow, low-contrast light sweep adds motion without changing the artwork.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { translationX = shine * 520f; rotationZ = 16f }
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.16f), Color.Transparent)
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                Row(
+                    modifier = Modifier.align(Alignment.Center).offset(y = 68.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    letters.forEach { (letter, color, delay) ->
+                        val settled by animateFloatAsState(
+                            targetValue = 1f,
+                            animationSpec = tween(
+                                durationMillis = 1050,
+                                delayMillis = delay,
+                                easing = FastOutSlowInEasing
+                            ),
+                            label = "fall $letter"
                         )
-                    )
-            )
+                        Text(
+                            text = letter,
+                            color = color,
+                            style = MaterialTheme.typography.displayMedium,
+                            modifier = Modifier
+                                .offset { IntOffset(0, (-260f * (1f - settled)).roundToInt()) }
+                                .graphicsLayer {
+                                    alpha = settled
+                                    rotationZ = (1f - settled) * if (delay % 2 == 0) -8f else 8f
+                                    shadowElevation = 12f
+                                }
+                        )
+                    }
+                }
+            }
         }
+        Text(
+            text = "در حال آماده‌سازی فروشگاه…",
+            color = Color(0xFFFFDBB5),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 10.dp)
+        )
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(0.42f)
-                .height(3.dp)
-                .offset(y = (-92).dp)
-                .clip(RoundedCornerShape(50))
-                .background(Color.White.copy(alpha = 0.13f))
+                .padding(top = 14.dp)
+                .width(250.dp)
+                .height(7.dp)
+                .background(Color(0xFF42104E), RoundedCornerShape(8.dp))
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .graphicsLayer { scaleX = entrance; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f) }
-                    .background(Color(0xFFFFB38A))
+                    .fillMaxWidth(progress)
+                    .height(7.dp)
+                    .background(Color(0xFFF51EAE), RoundedCornerShape(8.dp))
             )
         }
+        Text(
+            text = faInt((progress * 100f).roundToInt()) + "٪",
+            color = Color(0xFFFFD070),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
