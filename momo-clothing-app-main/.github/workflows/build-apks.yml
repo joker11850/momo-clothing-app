@@ -1,0 +1,58 @@
+name: Build Clothing Apps (Release)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
+      - name: Run shared-core unit tests
+        run: gradle :shared-core:test
+      - name: Prepare signing key
+        env:
+          MOMO_KEYSTORE_B64: ${{ secrets.MOMO_KEYSTORE_B64 }}
+        run: |
+          test -n "$MOMO_KEYSTORE_B64" || (echo "Missing MOMO_KEYSTORE_B64 repository secret" && exit 1)
+          echo "$MOMO_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/momo-upload-key.jks"
+      - name: Build signed Release APKs
+        env:
+          MOMO_KEYSTORE_PATH: ${{ runner.temp }}/momo-upload-key.jks
+          MOMO_KEYSTORE_PASSWORD: ${{ secrets.MOMO_KEYSTORE_PASSWORD }}
+          MOMO_KEY_ALIAS: ${{ secrets.MOMO_KEY_ALIAS }}
+          MOMO_KEY_PASSWORD: ${{ secrets.MOMO_KEY_PASSWORD }}
+        run: gradle :admin-app:assembleRelease :customer-app:assembleRelease
+      - name: Upload Admin Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: clothing-admin-release
+          path: admin-app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload Customer Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: clothing-customer-release
+          path: customer-app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 1
