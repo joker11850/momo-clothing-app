@@ -106,7 +106,7 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 fun AdminApp(store: AdminStore) {
     var showSplash by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        delay(1100)
+        delay(2500)
         showSplash = false
     }
     if (showSplash) {

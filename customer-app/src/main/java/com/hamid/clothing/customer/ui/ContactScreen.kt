@@ -44,7 +44,15 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         ContactChannel("bale", "بله", info.bale, "https://ble.ir/" + clean(info.bale))
     )
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-        ScreenTitle("تماس با ما")
+        ScreenTitle("راه‌های ارتباط با MOMO")
+        SoftCard(color = Beige) {
+            Column(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("MOMO SUPPORT", color = GoldInk, fontWeight = FontWeight.ExtraBold)
+                Text("کنار شما هستیم", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = GoldInk)
+                Text("برای راهنمایی خرید، پیگیری سفارش یا همکاری عمده، از راه‌های ارتباطی زیر با ما در تماس باشید.", color = Muted)
+                Text("MOMO در قلب بازار گناوه، درگهان، اصفهان", color = GoldInk, fontWeight = FontWeight.Bold)
+            }
+        }
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
