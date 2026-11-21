@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.foundation.shape.CircleShape
@@ -100,7 +101,7 @@ class Nav(private val stack: SnapshotStateList<Screen>) {
 fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
     var splashVisible by remember { mutableStateOf(true) }
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(1100)
+        kotlinx.coroutines.delay(2500)
         splashVisible = false
     }
     if (splashVisible) {
@@ -245,8 +246,8 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
             NavigationBarItem(
                 selected = current is Screen.Contact,
                 onClick = { nav.tab(Screen.Contact) },
-                icon = { ColorfulNavIcon(Icons.Default.Phone, current is Screen.Contact, contactColor, "تماس") },
-                label = { Text("تماس") },
+                icon = { ColorfulNavIcon(Icons.Default.ChatBubble, current is Screen.Contact, contactColor, "تماس با ما") },
+                label = { Text("تماس با ما") },
                 colors = colors
             )
         }

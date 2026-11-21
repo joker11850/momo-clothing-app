@@ -395,14 +395,11 @@ class CustomerStore(context: Context) {
 
     /** Returns an error message, or null when the request was recorded. */
     fun requestWholesale(businessName: String, city: String, note: String): String? {
-        val c = data.customer ?: return "ابتدا وارد حساب کاربری شوید"
         if (businessName.trim().isEmpty()) return "نام فروشگاه یا کسب‌وکار را وارد کنید"
         val request = WholesaleRequest(businessName.trim(), city.trim(), note.trim(), now())
-        update {
-            it.copy(
-                customer = c.copy(type = CustomerType.WHOLESALE, wholesaleStatus = WholesaleStatus.PENDING),
-                wholesaleRequest = request
-            )
+        update { current ->
+            val customer = current.customer?.copy(type = CustomerType.WHOLESALE, wholesaleStatus = WholesaleStatus.PENDING)
+            current.copy(customer = customer, wholesaleRequest = request)
         }
         return null
     }
@@ -485,7 +482,15 @@ class CustomerStore(context: Context) {
         shipping: ShippingMethod,
         payment: PaymentMethod
     ): PlaceResult {
-        val c = customer ?: return PlaceResult(listOf("ابتدا وارد حساب کاربری شوید"), null)
+        // Guest checkout: create a temporary retail identity for this local order.
+        // Guests cannot receive wholesale pricing or use store-credit payments.
+        val c = customer ?: Customer(
+            id = "guest-${newId()}",
+            fullName = receiverName.trim(),
+            phone = receiverPhone.trim(),
+            type = CustomerType.RETAIL,
+            wholesaleStatus = WholesaleStatus.NONE
+        )
         val priced = pricedCart()
         val input = checkoutInput(
             c, receiverName, receiverPhone, address, shipping, payment,
@@ -503,7 +508,7 @@ class CustomerStore(context: Context) {
                     it.copy(
                         orders = it.orders + saved,
                         cart = emptyList(),
-                        customer = (it.customer ?: c).let { cur -> if (cur.fullName.isBlank()) cur.copy(fullName = saved.receiverName) else cur },
+                        customer = it.customer?.let { cur -> if (cur.fullName.isBlank()) cur.copy(fullName = saved.receiverName) else cur },
                         addresses = if (saved.address.isNotBlank() && saved.address !in it.addresses) it.addresses + saved.address else it.addresses
                     )
                 }

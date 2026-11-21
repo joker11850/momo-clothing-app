@@ -89,18 +89,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     ) {
         item { HomeHeader(store, nav, importCatalog) }
 
-        if (store.isDemoCatalog) {
-            item {
-                SoftCard(color = Beige) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("کاتالوگ فعلی نمونه است", fontWeight = FontWeight.ExtraBold, color = GoldInk)
-                        Text("فایل کاتالوگ فروشگاه را از فروشنده بگیرید و دریافت کنید تا کالاها و عکس‌های واقعی نمایش داده شود.", style = MaterialTheme.typography.bodySmall, color = GoldInk)
-                        GoldButton("دریافت کاتالوگ فروشگاه", onClick = importCatalog, modifier = Modifier.fillMaxWidth())
-                    }
-                }
-            }
-        }
-
+        // Search is intentionally placed directly below the header for quick access.
         item {
             SoftCard(color = Color(0xFFEFDFE0), onClick = { nav.tab(Screen.Shop()) }) {
                 Row(
@@ -114,44 +103,46 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             }
         }
 
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                CompactSocialCard(
-                    tag = "instagram",
-                    title = "اینستاگرام ما",
-                    handle = if (store.info.instagram.isEmpty()) "به‌زودی" else "برای مشاهده لمس کنید",
-                    colors = listOf(Color(0xFF5B2A4A), Color(0xFF8E3B63)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (store.info.instagram.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
-                    else openUrl(context, "https://instagram.com/" + store.info.instagram)
-                }
-                CompactSocialCard(
-                    tag = "bale",
-                    title = "کانال بله ما",
-                    handle = "برای مشاهده لمس کنید",
-                    colors = listOf(Color(0xFF007F71), Color(0xFF00A896)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    openUrl(context, "https://ble.ir/poshak_momo")
+
+        if (store.isDemoCatalog) {
+            item {
+                SoftCard(color = Beige) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("کاتالوگ فعلی نمونه است", fontWeight = FontWeight.ExtraBold, color = GoldInk)
+                        Text("فایل کاتالوگ فروشگاه را از فروشنده بگیرید و دریافت کنید تا کالاها و عکس‌های واقعی نمایش داده شود.", style = MaterialTheme.typography.bodySmall, color = GoldInk)
+                        GoldButton("دریافت کاتالوگ فروشگاه", onClick = importCatalog, modifier = Modifier.fillMaxWidth())
+                    }
                 }
             }
         }
+
+
+        item {
+            val instagramImage = drawableId("banner_instagram_momo")
+            SoftCard(color = Color.Transparent, onClick = {
+                if (store.info.instagram.isEmpty()) toast(context, "لینک اینستاگرام هنوز تنظیم نشده است")
+                else openUrl(context, "https://instagram.com/" + store.info.instagram)
+            }) {
+                if (instagramImage != null) {
+                    Image(painter = painterResource(instagramImage), contentDescription = "پیج اینستاگرام پوشاک MOMO", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)))
+                }
+            }
+        }
+        item {
+            val baleImage = drawableId("banner_bale_momo")
+            SoftCard(color = Color.Transparent, onClick = { openUrl(context, "https://ble.ir/poshak_momo") }) {
+                if (baleImage != null) {
+                    Image(painter = painterResource(baleImage), contentDescription = "کانال بله پوشاک MOMO", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)))
+                }
+            }
+        }
+
         item { HeroPager(nav) }
 
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 QuickCard("جست‌وجو", "جست‌وجوی کالا", Icons.Default.Search, RoseLight, Burgundy, Modifier.weight(1f)) {
                     nav.tab(Screen.Shop())
-                }
-                if (store.isLoggedIn) {
-                    QuickCard("حساب من", "سفارش‌ها و مشخصات", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
-                        nav.tab(Screen.Account)
-                    }
-                } else {
-                    QuickCard("ورود و ثبت‌نام", "با شماره موبایل", Icons.Default.Person, Beige, Brown, Modifier.weight(1f)) {
-                        nav.go(Screen.Login(null))
-                    }
                 }
                 QuickCard("پشتیبانی", "پاسخگوی شما", Icons.Default.Headset, Mint, MintDark, Modifier.weight(1f)) {
                     nav.tab(Screen.Contact)
@@ -262,7 +253,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
                 })
                 DropdownMenuItem(text = { Text("عضویت عمده") }, onClick = {
                     menuOpen = false
-                    if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale))
+                    nav.go(Screen.Wholesale)
                 })
                 DropdownMenuItem(text = { Text("درباره MOMO") }, onClick = { menuOpen = false; nav.go(Screen.BrandStory) })
                 DropdownMenuItem(text = { Text("سیاست حفظ حریم خصوصی") }, onClick = { menuOpen = false; nav.go(Screen.Privacy) })
@@ -480,7 +471,7 @@ private fun WholesaleBanner(nav: Nav, store: CustomerStore) {
             )
             GoldButton(
                 if (store.customer?.canSeeWholesale == true) "شما عضو عمده هستید" else "درخواست عضویت عمده",
-                onClick = { if (store.isLoggedIn) nav.go(Screen.Wholesale) else nav.go(Screen.Login(Screen.Wholesale)) }
+                onClick = { nav.go(Screen.Wholesale) }
             )
         }
     }
