@@ -49,6 +49,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import com.hamid.clothing.customer.CustomerStore
 import com.hamid.clothing.customer.R
 
@@ -177,77 +190,74 @@ fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
     if (message != null) InfoDialog("توجه", message) { store.dismissNotice() }
 }
 
+/**
+ * Bottom navigation built from the finished artwork (res/drawable-nodpi/nav_bar_momo.webp).
+ * The artwork has no badge and no active-indicator baked in: both are drawn here.
+ * Zones are laid out left-to-right in the artwork order: contact, account, cart, shop, home.
+ */
 @Composable
 private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
-    val colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = Color.White,
-        selectedTextColor = Burgundy,
-        indicatorColor = Color.Transparent,
-        unselectedIconColor = Muted,
-        unselectedTextColor = Muted
+    data class Zone(val weight: Float, val label: String, val selected: Boolean, val cart: Boolean, val onClick: () -> Unit)
+    val zones = listOf(
+        Zone(0.215f, "تماس با ما", current is Screen.Contact, false) { nav.tab(Screen.Contact) },
+        Zone(0.190f, "حساب من", current is Screen.Account, false) { nav.tab(Screen.Account) },
+        Zone(0.190f, "سبد خرید", current is Screen.Cart, true) { nav.tab(Screen.Cart) },
+        Zone(0.192f, "فروشگاه", current is Screen.Shop, false) { nav.tab(Screen.Shop()) },
+        Zone(0.213f, "خانه", current is Screen.Home, false) { nav.tab(Screen.Home) }
     )
-    val homeColor = Color(0xFFFF4652)
-    val shopColor = Color(0xFF7B3FF2)
-    val cartColor = Color(0xFFFF8A3D)
-    val accountColor = Color(0xFF3B82F6)
-    val contactColor = Color(0xFF00A896)
-    val glassShape = RoundedCornerShape(28.dp)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .shadow(10.dp, glassShape, clip = false)
-            .clip(glassShape)
-            .background(CardColor.copy(alpha = 0.88f))
-            .border(1.dp, Gold.copy(alpha = 0.42f), glassShape)
-    ) {
-        NavigationBar(
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 4.dp)
+                .aspectRatio(1400f / 414f)
         ) {
-            NavigationBarItem(
-                selected = current is Screen.Home,
-                onClick = { nav.tab(Screen.Home) },
-                icon = { ColorfulNavIcon(Icons.Default.Home, current is Screen.Home, homeColor, "خانه") },
-                label = { Text("خانه") },
-                colors = colors
+            val w = maxWidth
+            val h = maxHeight
+            Image(
+                painter = painterResource(R.drawable.nav_bar_momo),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.matchParentSize()
             )
-            NavigationBarItem(
-                selected = current is Screen.Shop,
-                onClick = { nav.tab(Screen.Shop()) },
-                icon = { ColorfulNavIcon(Icons.Default.ShoppingBag, current is Screen.Shop, shopColor, "فروشگاه") },
-                label = { Text("فروشگاه") },
-                colors = colors
-            )
-            NavigationBarItem(
-                selected = current is Screen.Cart,
-                onClick = { nav.tab(Screen.Cart) },
-                icon = {
-                    ColorfulNavIcon(
-                        icon = Icons.Default.ShoppingCart,
-                        selected = current is Screen.Cart,
-                        color = cartColor,
-                        description = "سبد خرید",
-                        badge = store.cartCount.takeIf { it > 0 }
-                    )
-                },
-                label = { Text("سبد خرید") },
-                colors = colors
-            )
-            NavigationBarItem(
-                selected = current is Screen.Account,
-                onClick = { nav.tab(Screen.Account) },
-                icon = { ColorfulNavIcon(Icons.Default.Person, current is Screen.Account, accountColor, "حساب من") },
-                label = { Text("حساب من") },
-                colors = colors
-            )
-            NavigationBarItem(
-                selected = current is Screen.Contact,
-                onClick = { nav.tab(Screen.Contact) },
-                icon = { ColorfulNavIcon(Icons.Default.ChatBubble, current is Screen.Contact, contactColor, "تماس با ما") },
-                label = { Text("تماس با ما") },
-                colors = colors
-            )
+            Row(modifier = Modifier.matchParentSize()) {
+                zones.forEach { z ->
+                    Box(
+                        modifier = Modifier
+                            .weight(z.weight)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                role = Role.Tab,
+                                onClickLabel = z.label,
+                                onClick = z.onClick
+                            )
+                    ) {
+                        if (z.selected) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = h * 0.865f)
+                                    .fillMaxWidth(0.5f)
+                                    .height(h * 0.03f)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(if (z.cart) Color(0xFFF2D27A) else Color(0xFF7A1530))
+                            )
+                        }
+                        if (z.cart && store.cartCount > 0) {
+                            Badge(
+                                containerColor = Color(0xFFE53935),
+                                contentColor = Color.White,
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .offset(x = w * 0.047f, y = h * 0.29f - 8.dp)
+                            ) { Text(faInt(store.cartCount)) }
+                        }
+                    }
+                }
+            }
         }
     }
 }
