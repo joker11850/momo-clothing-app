@@ -57,13 +57,11 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         ScreenTitle("راه‌های ارتباط با MOMO")
-        SoftCard(color = Beige) {
-            Column(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("MOMO SUPPORT", color = GoldInk, fontWeight = FontWeight.ExtraBold)
-                Text("کنار شما هستیم", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = GoldInk)
-                Text("برای راهنمایی خرید، پیگیری سفارش یا همکاری عمده، از راه‌های ارتباطی زیر با ما در تماس باشید.", color = Muted)
-            }
-        }
+        Image(
+            painter = painterResource(R.drawable.banner_momo_support),
+            contentDescription = "پشتیبانی MOMO - کنار شما هستیم",
+            modifier = Modifier.fillMaxWidth().aspectRatio(1.8018f).clip(RoundedCornerShape(24.dp))
+        )
 
         if (channels.all { it.handle.isBlank() }) {
             SoftCard(color = Beige) {
@@ -103,7 +101,7 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         Image(
             painter = painterResource(R.drawable.banner_momo_store_location),
             contentDescription = "فروشگاه حضوری MOMO",
-            modifier = Modifier.fillMaxWidth().aspectRatio(1.88f).clip(RoundedCornerShape(22.dp))
+            modifier = Modifier.fillMaxWidth().aspectRatio(2.0864f).clip(RoundedCornerShape(24.dp))
         )
     }
 }
