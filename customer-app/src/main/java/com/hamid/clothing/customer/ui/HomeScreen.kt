@@ -124,7 +124,15 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
                 else openUrl(context, "https://instagram.com/" + store.info.instagram)
             }) {
                 if (instagramImage != null) {
-                    Image(painter = painterResource(instagramImage), contentDescription = "پیج اینستاگرام پوشاک MOMO", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)))
+                    Image(painter = painterResource(instagramImage), contentDescription = "کاور اینستاگرام پوشاک MOMO", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)))
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text("پیج اینستاگرام momo", color = Burgundy, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text("@poshake_momo", color = Muted, style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
         }
