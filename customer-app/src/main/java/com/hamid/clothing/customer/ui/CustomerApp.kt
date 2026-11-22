@@ -195,23 +195,24 @@ fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
  * The artwork has no badge and no active-indicator baked in: both are drawn here.
  * Zones are laid out left-to-right in the artwork order: contact, account, cart, shop, home.
  */
+private data class NavZone(val weight: Float, val label: String, val selected: Boolean, val cart: Boolean, val onClick: () -> Unit)
+
 @Composable
 private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
-    data class Zone(val weight: Float, val label: String, val selected: Boolean, val cart: Boolean, val onClick: () -> Unit)
     val zones = listOf(
-        Zone(0.215f, "تماس با ما", current is Screen.Contact, false) { nav.tab(Screen.Contact) },
-        Zone(0.190f, "حساب من", current is Screen.Account, false) { nav.tab(Screen.Account) },
-        Zone(0.190f, "سبد خرید", current is Screen.Cart, true) { nav.tab(Screen.Cart) },
-        Zone(0.192f, "فروشگاه", current is Screen.Shop, false) { nav.tab(Screen.Shop()) },
-        Zone(0.213f, "خانه", current is Screen.Home, false) { nav.tab(Screen.Home) }
+        NavZone(0.222f, "تماس با ما", current is Screen.Contact, false) { nav.tab(Screen.Contact) },
+        NavZone(0.182f, "حساب من", current is Screen.Account, false) { nav.tab(Screen.Account) },
+        NavZone(0.196f, "سبد خرید", current is Screen.Cart, true) { nav.tab(Screen.Cart) },
+        NavZone(0.185f, "فروشگاه", current is Screen.Shop, false) { nav.tab(Screen.Shop()) },
+        NavZone(0.215f, "خانه", current is Screen.Home, false) { nav.tab(Screen.Home) }
     )
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         BoxWithConstraints(
             modifier = Modifier
                 .navigationBarsPadding()
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 4.dp)
-                .aspectRatio(1400f / 414f)
+                .padding(horizontal = 4.dp, vertical = 4.dp)
+                .aspectRatio(6.0870f)
         ) {
             val w = maxWidth
             val h = maxHeight
@@ -235,15 +236,26 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
                                 onClick = z.onClick
                             )
                     ) {
-                        if (z.selected) {
+                        if (z.selected && !z.cart) {
+                            // thin burgundy line under the selected label
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
-                                    .padding(top = h * 0.865f)
-                                    .fillMaxWidth(0.5f)
-                                    .height(h * 0.03f)
+                                    .padding(top = h * 0.87f)
+                                    .fillMaxWidth(0.4f)
+                                    .height(h * 0.045f)
                                     .clip(RoundedCornerShape(50))
-                                    .background(if (z.cart) Color(0xFFF2D27A) else Color(0xFF7A1530))
+                                    .background(Color(0xFF7A1530))
+                            )
+                        }
+                        if (z.selected && z.cart) {
+                            // light ring around the round cart button
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = h * 0.367f - w * 0.0765f)
+                                    .size(w * 0.153f)
+                                    .border(2.dp, Color(0xFFFFE9A8), CircleShape)
                             )
                         }
                         if (z.cart && store.cartCount > 0) {
@@ -252,7 +264,7 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
                                 contentColor = Color.White,
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
-                                    .offset(x = w * 0.047f, y = h * 0.29f - 8.dp)
+                                    .offset(x = w * 0.047f, y = h * 0.081f - 8.dp)
                             ) { Text(faInt(store.cartCount)) }
                         }
                     }
