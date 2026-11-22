@@ -83,6 +83,7 @@ import androidx.compose.ui.text.style.TextDirection
 import android.content.Context
 import android.net.Uri
 import android.content.Intent
+import androidx.compose.ui.semantics.Role
 import com.hamid.clothing.customer.CustomerStore
 import kotlinx.coroutines.delay
 
@@ -138,13 +139,10 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         item { HeroPager(nav) }
 
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                QuickCard("جست‌وجو", "جست‌وجوی کالا", Icons.Default.Search, RoseLight, Burgundy, Modifier.weight(1f)) {
-                    nav.tab(Screen.Shop())
-                }
-                QuickCard("پشتیبانی", "پاسخگوی شما", Icons.Default.Headset, Mint, MintDark, Modifier.weight(1f)) {
-                    nav.tab(Screen.Contact)
-                }
+            // Right: search, left: support (the page is RTL, so the first child sits on the right)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                QuickImageCard(R.drawable.quick_search_momo, "جست‌وجوی کالا", Modifier.weight(1f)) { nav.tab(Screen.Shop()) }
+                QuickImageCard(R.drawable.quick_support_momo, "پشتیبانی", Modifier.weight(1f)) { nav.tab(Screen.Contact) }
             }
         }
 
@@ -568,5 +566,19 @@ private fun BaleCover(context: Context) {
             .shadow(4.dp, shape)
             .clip(shape)
             .clickable { openUrl(context, "https://ble.ir/poshak_momo") }
+    )
+}
+
+
+/** Quick-access card made of finished artwork (title, subtitle and chevron are part of the picture). */
+@Composable
+private fun QuickImageCard(image: Int, description: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Image(
+        painter = painterResource(image),
+        contentDescription = description,
+        contentScale = ContentScale.Fit,
+        modifier = modifier
+            .aspectRatio(1.8274f)
+            .clickable(role = Role.Button, onClickLabel = description, onClick = onClick)
     )
 }
