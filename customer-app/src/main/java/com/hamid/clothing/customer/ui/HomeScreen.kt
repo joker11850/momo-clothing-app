@@ -133,14 +133,7 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
 
         item { InstagramCover(context) }
-        item {
-            val baleImage = drawableId("banner_bale_momo")
-            SoftCard(color = Color.Transparent, onClick = { openUrl(context, "https://ble.ir/poshak_momo") }) {
-                if (baleImage != null) {
-                    Image(painter = painterResource(baleImage), contentDescription = "کانال بله پوشاک MOMO", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(28.dp)))
-                }
-            }
-        }
+        item { BaleCover(context) }
 
         item { HeroPager(nav) }
 
@@ -556,5 +549,24 @@ private fun InstagramCover(context: Context) {
             .shadow(4.dp, shape)
             .clip(shape)
             .clickable { openInstagramPage(context) }
+    )
+}
+
+
+/** Bale cover: finished artwork (res/drawable-nodpi/banner_bale_momo.jpg); tapping opens the Bale channel. */
+@Composable
+private fun BaleCover(context: Context) {
+    val image = drawableId("banner_bale_momo") ?: return
+    val shape = RoundedCornerShape(28.dp)
+    Image(
+        painter = painterResource(image),
+        contentDescription = "کانال بله پوشاک MOMO",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1400f / 700)
+            .shadow(4.dp, shape)
+            .clip(shape)
+            .clickable { openUrl(context, "https://ble.ir/poshak_momo") }
     )
 }
