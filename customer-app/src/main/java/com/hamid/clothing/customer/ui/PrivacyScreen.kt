@@ -91,73 +91,28 @@ fun PrivacyScreen(nav: Nav, padding: PaddingValues) {
     }
 }
 
-/** Header card artwork (res/drawable-nodpi/privacy_header_momo.webp, no text); the texts are drawn here. */
+/** Header banner (res/drawable-nodpi/privacy_header_momo.webp) with the update date under it. */
 @Composable
 private fun PrivacyHeader() {
-    val shape = RoundedCornerShape(28.dp)
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(3.4449f)
-            .shadow(4.dp, shape)
-            .clip(shape)
-    ) {
-        val w = maxWidth
-        val h = maxHeight
-        val density = LocalDensity.current
-        fun sz(fraction: Float) = with(density) { (w * fraction).toSp() }
-
+    val shape = RoundedCornerShape(20.dp)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Image(
             painter = painterResource(R.drawable.privacy_header_momo),
-            contentDescription = null,
+            contentDescription = "سیاست حفظ حریم خصوصی MOMO",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2.8455f)
+                .shadow(4.dp, shape)
+                .clip(shape)
         )
-
-        @Composable
-        fun Label(cx: Float, cy: Float, halfW: Float, halfH: Float, content: @Composable () -> Unit) {
-            Box(
-                modifier = Modifier
-                    .absoluteOffset(x = w * (cx - halfW), y = h * (cy - halfH))
-                    .width(w * (halfW * 2))
-                    .height(h * (halfH * 2)),
-                contentAlignment = Alignment.Center
-            ) { content() }
-        }
-
-        Label(0.665f, 0.268f, 0.29f, 0.14f) {
-            Text(
-                "سیاست حفظ حریم خصوصی",
-                color = PrivBurgundy,
-                fontSize = sz(0.046f),
-                fontWeight = FontWeight.ExtraBold,
-                maxLines = 1,
-                softWrap = false,
-                textAlign = TextAlign.Center
-            )
-        }
-        Label(0.815f, 0.511f, 0.16f, 0.16f) {
-            Text(
-                "MOMO",
-                color = Color(0xFFB0123F),
-                fontSize = sz(0.075f),
-                fontWeight = FontWeight.Black,
-                maxLines = 1,
-                softWrap = false,
-                textAlign = TextAlign.Center
-            )
-        }
-        Label(0.715f, 0.787f, 0.26f, 0.11f) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = PrivBody, modifier = Modifier.size(with(density) { sz(0.045f).toDp() }))
-                Text(
-                    PRIVACY_DATE,
-                    color = PrivBody,
-                    fontSize = sz(0.030f),
-                    maxLines = 1,
-                    softWrap = false
-                )
-            }
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = PrivBody, modifier = Modifier.size(18.dp))
+            Text(PRIVACY_DATE, color = PrivBody, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
