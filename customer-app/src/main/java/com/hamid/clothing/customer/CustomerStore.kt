@@ -482,7 +482,12 @@ class CustomerStore(context: Context) {
         shipping: ShippingMethod,
         payment: PaymentMethod
     ): PlaceResult {
-        val c = customer ?: return PlaceResult(listOf("ابتدا وارد حساب کاربری شوید"), null)
+        val c = customer ?: Customer(
+            id = "guest-${newId()}",
+            fullName = receiverName.trim(),
+            phone = receiverPhone.trim(),
+            joinedAt = now()
+        )
         val priced = pricedCart()
         val input = checkoutInput(
             c, receiverName, receiverPhone, address, shipping, payment,

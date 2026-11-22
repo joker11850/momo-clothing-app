@@ -60,7 +60,6 @@ sealed interface Screen {
     data object Checkout : Screen
     data class OrderDone(val orderId: String) : Screen
     data object Account : Screen
-    data class Login(val next: Screen? = null) : Screen
     data object Profile : Screen
     data object Orders : Screen
     data class OrderDetail(val id: String) : Screen
@@ -153,7 +152,6 @@ fun CustomerApp(store: CustomerStore, onToggleDarkMode: () -> Unit = {}) {
             Screen.Checkout -> CheckoutScreen(store, nav, padding)
             is Screen.OrderDone -> OrderDoneScreen(store, nav, padding, current.orderId)
             Screen.Account -> AccountScreen(store, nav, padding, onToggleDarkMode)
-            is Screen.Login -> LoginScreen(store, nav, padding, current.next)
             Screen.Profile -> ProfileScreen(store, nav, padding)
             Screen.Orders -> OrdersScreen(store, nav, padding)
             is Screen.OrderDetail -> OrderDetailScreen(store, nav, padding, current.id)

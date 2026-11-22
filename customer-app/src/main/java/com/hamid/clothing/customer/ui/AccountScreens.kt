@@ -82,6 +82,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                MenuRow("سفارش‌های من", "${faInt(store.data.orders.size)} سفارش ثبت‌شده روی این گوشی") { nav.go(Screen.Orders) }
                 MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
                 MenuRow("عضویت عمده", "ثبت درخواست بدون ورود به حساب") { nav.go(Screen.Wholesale) }
                 MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }

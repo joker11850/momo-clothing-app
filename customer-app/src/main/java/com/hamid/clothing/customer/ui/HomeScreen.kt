@@ -249,7 +249,7 @@ private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
                 DropdownMenuItem(text = { Text("علاقه‌مندی‌ها") }, onClick = { menuOpen = false; nav.go(Screen.Favorites) })
                 DropdownMenuItem(text = { Text("سفارش‌های من") }, onClick = {
                     menuOpen = false
-                    if (store.isLoggedIn) nav.go(Screen.Orders) else nav.go(Screen.Login(Screen.Orders))
+                    nav.go(Screen.Orders)
                 })
                 DropdownMenuItem(text = { Text("عضویت عمده") }, onClick = {
                     menuOpen = false
