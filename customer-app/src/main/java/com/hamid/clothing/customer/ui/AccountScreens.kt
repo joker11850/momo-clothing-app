@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Info
 import com.hamid.clothing.core.CustomerType
 import com.hamid.clothing.core.FaLabels
 import com.hamid.clothing.core.InvoiceText
@@ -183,6 +184,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
                 AccountMenuRow(Icons.Filled.MenuBook, "دریافت کاتالوگ فروشگاه", if (store.isDemoCatalog) "نمونه محصولات و کاتالوگ فروشگاه" else catalogText, true) { importCatalog() }
                 AccountMenuRow(Icons.Filled.Notifications, "اعلان‌های فروشگاه", "مشاهده پیام‌ها و اطلاعیه‌ها", false) { nav.go(Screen.Notifications) }
                 AccountMenuRow(Icons.Filled.VerifiedUser, "سیاست حفظ حریم خصوصی", "قوانین و حریم خصوصی اپلیکیشن", true) { nav.go(Screen.Privacy) }
+                AccountMenuRow(Icons.Filled.Info, "درباره MOMO", "داستان برند و فروشگاه ما", false) { nav.go(Screen.BrandStory) }
             }
             return@Column
         }
@@ -234,6 +236,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
             AccountMenuRow(Icons.Filled.MenuBook, "دریافت کاتالوگ فروشگاه", if (store.isDemoCatalog) "نمونه محصولات و کاتالوگ فروشگاه" else catalogText, true) { importCatalog() }
             AccountMenuRow(Icons.Filled.Notifications, "اعلان‌های فروشگاه", "مشاهده پیام‌ها و اطلاعیه‌ها", false) { nav.go(Screen.Notifications) }
             AccountMenuRow(Icons.Filled.VerifiedUser, "سیاست حفظ حریم خصوصی", "قوانین و حریم خصوصی اپلیکیشن", true) { nav.go(Screen.Privacy) }
+            AccountMenuRow(Icons.Filled.Info, "درباره MOMO", "داستان برند و فروشگاه ما", false) { nav.go(Screen.BrandStory) }
             OutlinedButton(onClick = { confirmLogout = true }, modifier = Modifier.fillMaxWidth()) { Text("خروج از حساب", color = Danger) }
             Box(modifier = Modifier.height(24.dp))
         }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.LocalShipping
@@ -235,26 +236,11 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
 @Composable
 private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
-    var menuOpen by remember { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Box {
-            Surface(onClick = { menuOpen = true }, shape = RoundedCornerShape(18.dp), color = RoseLight.copy(alpha = 0.7f), modifier = Modifier.size(48.dp)) {
-                Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Menu, contentDescription = "منو", tint = Ink) }
-            }
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(text = { Text("علاقه‌مندی‌ها") }, onClick = { menuOpen = false; nav.go(Screen.Favorites) })
-                DropdownMenuItem(text = { Text("سفارش‌های من") }, onClick = {
-                    menuOpen = false
-                    nav.go(Screen.Orders)
-                })
-                DropdownMenuItem(text = { Text("عضویت عمده") }, onClick = {
-                    menuOpen = false
-                    nav.go(Screen.Wholesale)
-                })
-                DropdownMenuItem(text = { Text("درباره MOMO") }, onClick = { menuOpen = false; nav.go(Screen.BrandStory) })
-                DropdownMenuItem(text = { Text("سیاست حفظ حریم خصوصی") }, onClick = { menuOpen = false; nav.go(Screen.Privacy) })
-                DropdownMenuItem(text = { Text("تماس با ما") }, onClick = { menuOpen = false; nav.tab(Screen.Contact) })
-                DropdownMenuItem(text = { Text("دریافت کاتالوگ فروشگاه") }, onClick = { menuOpen = false; onImport() })
+        // Favorites shortcut (replaces the old three-line menu: its items now live in "حساب من")
+        Surface(onClick = { nav.go(Screen.Favorites) }, shape = RoundedCornerShape(18.dp), color = RoseLight.copy(alpha = 0.7f), modifier = Modifier.size(48.dp)) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Favorite, contentDescription = "علاقه‌مندی‌ها", tint = Burgundy)
             }
         }
         Row(
