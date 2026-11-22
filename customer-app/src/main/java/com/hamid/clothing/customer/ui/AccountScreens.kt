@@ -37,6 +37,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.Person
 import com.hamid.clothing.core.CustomerType
 import com.hamid.clothing.core.FaLabels
 import com.hamid.clothing.core.InvoiceText
@@ -58,6 +77,81 @@ private fun WholesaleStatus.fa(): String = when (this) {
     WholesaleStatus.REJECTED -> "ردشده"
 }
 
+private val AccBurgundy = Color(0xFF7D1634)
+private val AccBurgundyDeep = Color(0xFF5A0F26)
+private val AccGold = Color(0xFFD9A441)
+private val AccTitle = Color(0xFF3A0F24)
+private val AccChevron = Color(0xFFB9772E)
+private val AccPink = Brush.verticalGradient(listOf(Color(0xFFFFE3E8), Color(0xFFF9C9D3)))
+private val AccPeach = Brush.verticalGradient(listOf(Color(0xFFFFEEDD), Color(0xFFF8D9BE)))
+private val AccRowBg = Brush.horizontalGradient(listOf(Color(0xFFFBEAE2), Color(0xFFFFFBF7)))
+private val AccGoldBorder = Brush.horizontalGradient(listOf(Color(0xFFE2B66A), Color(0xFFF3DDB0), Color(0xFFE2B66A)))
+
+/** Burgundy pill header with a gold outline ("حساب من"). */
+@Composable
+private fun AccountHeader(title: String) {
+    val shape = RoundedCornerShape(30.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .shadow(6.dp, shape)
+            .clip(shape)
+            .background(Brush.horizontalGradient(listOf(AccBurgundyDeep, AccBurgundy)))
+            .border(1.5.dp, AccGoldBorder, shape)
+            .padding(horizontal = 20.dp, vertical = 14.dp)
+    ) {
+        Row(
+            modifier = Modifier.align(Alignment.Center),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(Icons.Outlined.Person, contentDescription = null, tint = Color(0xFFF3DDB0), modifier = Modifier.size(30.dp))
+            Text(title, color = Color.White, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
+        }
+    }
+}
+
+/** Menu row: round icon on the right, title + subtitle, chevron on the left (RTL). */
+@Composable
+private fun AccountMenuRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    pinkIcon: Boolean = true,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(34.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, shape)
+            .clip(shape)
+            .background(AccRowBg)
+            .border(1.dp, AccGoldBorder, shape)
+            .clickable(role = Role.Button, onClickLabel = title, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(if (pinkIcon) AccPink else AccPeach)
+                .border(1.dp, AccGoldBorder, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = AccBurgundy, modifier = Modifier.size(28.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = AccTitle, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+            Text(subtitle, color = Muted, style = MaterialTheme.typography.bodySmall)
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = AccChevron, modifier = Modifier.size(28.dp))
+    }
+}
+
 @Composable
 private fun MenuRow(title: String, subtitle: String? = null, onClick: () -> Unit) {
     SoftCard(onClick = onClick) {
@@ -76,20 +170,19 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
     val catalogText = if (store.isDemoCatalog) "نمونه — برای دریافت کاتالوگ فروشگاه بزنید" else "آخرین به‌روزرسانی: ${faDate(store.catalogDate)}"
 
     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-        ScreenTitle("حساب من")
+        AccountHeader("حساب من")
         if (customer == null) {
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                MenuRow("سفارش‌های من", "${faInt(store.data.orders.size)} سفارش ثبت‌شده روی این گوشی") { nav.go(Screen.Orders) }
-                MenuRow("علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
-                MenuRow("عضویت عمده", "ثبت درخواست بدون ورود به حساب") { nav.go(Screen.Wholesale) }
-                MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
-                MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
-                MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
-                MenuRow("سیاست حفظ حریم خصوصی", "نحوه استفاده و نگهداری اطلاعات") { nav.go(Screen.Privacy) }
-                MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
+                AccountMenuRow(Icons.Filled.ShoppingBag, "سفارش‌های من", "مشاهده و پیگیری آخرین سفارش‌ها", true) { nav.go(Screen.Orders) }
+                AccountMenuRow(Icons.Filled.Favorite, "علاقه‌مندی‌ها", "محصولات مورد علاقه شما", true) { nav.go(Screen.Favorites) }
+                AccountMenuRow(Icons.Filled.Groups, "عضویت عمده", "ثبت درخواست عضویت در خرید عمده", false) { nav.go(Screen.Wholesale) }
+                AccountMenuRow(Icons.Filled.AccountBalanceWallet, "حساب‌های فروشگاه", "برای پرداخت کارت به کارت", false) { nav.go(Screen.BankInfo) }
+                AccountMenuRow(Icons.Filled.MenuBook, "دریافت کاتالوگ فروشگاه", if (store.isDemoCatalog) "نمونه محصولات و کاتالوگ فروشگاه" else catalogText, true) { importCatalog() }
+                AccountMenuRow(Icons.Filled.Notifications, "اعلان‌های فروشگاه", "مشاهده پیام‌ها و اطلاعیه‌ها", false) { nav.go(Screen.Notifications) }
+                AccountMenuRow(Icons.Filled.VerifiedUser, "سیاست حفظ حریم خصوصی", "قوانین و حریم خصوصی اپلیکیشن", true) { nav.go(Screen.Privacy) }
             }
             return@Column
         }
@@ -98,7 +191,7 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SoftCard(color = Burgundy) {
+            SoftCard(color = AccBurgundy) {
                 Row(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     Surface(shape = CircleShape, color = Gold, modifier = Modifier.size(56.dp)) {
                         Box(contentAlignment = Alignment.Center) {
@@ -133,15 +226,14 @@ fun AccountScreen(store: CustomerStore, nav: Nav, padding: PaddingValues, onTogg
                 }
             }
 
-            MenuRow("سفارش‌های من", "${faInt(store.data.orders.size)} سفارش") { nav.go(Screen.Orders) }
-            MenuRow("علاقه‌مندی‌ها", "${faInt(store.data.favorites.size)} کالا") { nav.go(Screen.Favorites) }
-            MenuRow("مشخصات و آدرس‌ها") { nav.go(Screen.Profile) }
-            MenuRow("عضویت عمده", customer.wholesaleStatus.fa()) { nav.go(Screen.Wholesale) }
-            MenuRow("حساب‌های فروشگاه", "برای پرداخت کارت‌به‌کارت") { nav.go(Screen.BankInfo) }
-            MenuRow("دریافت کاتالوگ فروشگاه", catalogText) { importCatalog() }
-            MenuRow("اعلان‌های فروشگاه") { nav.go(Screen.Notifications) }
-            MenuRow("سیاست حفظ حریم خصوصی", "نحوه استفاده و نگهداری اطلاعات") { nav.go(Screen.Privacy) }
-            MenuRow("حالت تاریک", "تغییر ظاهر برنامه برای استفاده شبانه") { onToggleDarkMode() }
+            AccountMenuRow(Icons.Filled.ShoppingBag, "سفارش‌های من", "مشاهده و پیگیری آخرین سفارش‌ها", true) { nav.go(Screen.Orders) }
+            AccountMenuRow(Icons.Filled.Favorite, "علاقه‌مندی‌ها", "محصولات مورد علاقه شما", true) { nav.go(Screen.Favorites) }
+            AccountMenuRow(Icons.Filled.Person, "مشخصات و آدرس‌ها", "اطلاعات تماس و آدرس‌های شما", false) { nav.go(Screen.Profile) }
+            AccountMenuRow(Icons.Filled.Groups, "عضویت عمده", customer.wholesaleStatus.fa(), false) { nav.go(Screen.Wholesale) }
+            AccountMenuRow(Icons.Filled.AccountBalanceWallet, "حساب‌های فروشگاه", "برای پرداخت کارت به کارت", true) { nav.go(Screen.BankInfo) }
+            AccountMenuRow(Icons.Filled.MenuBook, "دریافت کاتالوگ فروشگاه", if (store.isDemoCatalog) "نمونه محصولات و کاتالوگ فروشگاه" else catalogText, true) { importCatalog() }
+            AccountMenuRow(Icons.Filled.Notifications, "اعلان‌های فروشگاه", "مشاهده پیام‌ها و اطلاعیه‌ها", false) { nav.go(Screen.Notifications) }
+            AccountMenuRow(Icons.Filled.VerifiedUser, "سیاست حفظ حریم خصوصی", "قوانین و حریم خصوصی اپلیکیشن", true) { nav.go(Screen.Privacy) }
             OutlinedButton(onClick = { confirmLogout = true }, modifier = Modifier.fillMaxWidth()) { Text("خروج از حساب", color = Danger) }
             Box(modifier = Modifier.height(24.dp))
         }
