@@ -253,7 +253,7 @@ private fun BottomBar(store: CustomerStore, nav: Nav, current: Screen) {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
-                                    .padding(top = h * 0.367f - w * 0.0765f)
+                                    .offset(y = h * 0.367f - w * 0.0765f)
                                     .size(w * 0.153f)
                                     .border(2.dp, Color(0xFFFFE9A8), CircleShape)
                             )
