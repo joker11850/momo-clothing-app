@@ -29,6 +29,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
 import com.hamid.clothing.customer.CustomerStore
 import com.hamid.clothing.customer.R
 
@@ -43,14 +55,14 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
 
     val channels = listOf(
         ContactChannel("phone", "تماس تلفنی", info.phone, "tel:" + clean(info.phone)),
-        ContactChannel("phone", "تماس تلفنی", info.phone2, "tel:" + clean(info.phone2)),
+        ContactChannel("phone", "تماس تلفنی", info.phone2, "tel:" + clean(info.phone2)).takeIf { info.phone2.isNotBlank() },
         ContactChannel("whatsapp", "واتساپ", info.whatsapp, "https://wa.me/" + clean(info.whatsapp)),
         ContactChannel("telegram", "تلگرام", info.telegram, "https://t.me/" + clean(info.telegram)),
         ContactChannel("instagram", "اینستاگرام", "poshake_momo", "https://instagram.com/poshake_momo"),
         ContactChannel("rubika", "روبیکا", info.rubika, "https://rubika.ir/" + clean(info.rubika)),
         ContactChannel("eitaa", "ایتا", info.eitaa, "https://eitaa.com/" + clean(info.eitaa)),
         ContactChannel("bale", "بله", info.bale, "https://ble.ir/" + clean(info.bale))
-    )
+    ).filterNotNull()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -78,22 +90,9 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
         channels.forEach { channel ->
             val ready = channel.handle.isNotBlank()
             val subtitle = if (channel.key == "bale") "جهت خرید عمده و تکی" else "درصورت نداشتن بله راه ارتباطی"
-            SoftCard(onClick = {
+            ContactRow(channel.key, channel.title, subtitle, ready) {
                 if (ready) openUrl(context, channel.url)
                 else toast(context, "${channel.title} هنوز تنظیم نشده است")
-            }) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    BrandIcon(channel.key, size = 48.dp, enabled = ready)
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(channel.title, fontWeight = FontWeight.ExtraBold)
-                        Text(subtitle, color = Burgundy, style = MaterialTheme.typography.bodySmall)
-                    }
-                    if (ready) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Muted)
-                }
             }
         }
 
@@ -103,5 +102,53 @@ fun ContactScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
             contentDescription = "فروشگاه حضوری MOMO",
             modifier = Modifier.fillMaxWidth().aspectRatio(2.0864f).clip(RoundedCornerShape(24.dp))
         )
+    }
+}
+
+
+private val RowBg = Brush.verticalGradient(listOf(Color(0xFFFFFBF7), Color(0xFFFFF1EC), Color(0xFFFBDDE4)))
+private val RowBorder = Brush.horizontalGradient(listOf(Color(0xFFE2B66A), Color(0xFFF3DDB0), Color(0xFFE2B66A)))
+
+/** Pill row: logo on the right, title + subtitle, chevron on the left (RTL). */
+@Composable
+private fun ContactRow(key: String, title: String, subtitle: String, ready: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(36.dp)
+    val icon = drawableId("contact_icon_$key")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, shape)
+            .clip(shape)
+            .background(RowBg)
+            .border(1.dp, RowBorder, shape)
+            .clickable(role = Role.Button, onClickLabel = title, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(CircleShape)
+                .background(Brush.radialGradient(listOf(Color(0xFFFFFFFF), Color(0xFFFFEEE6))))
+                .border(1.dp, Color(0xFFF1DCC8), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (icon != null) {
+                Image(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(46.dp).alpha(if (ready) 1f else 0.4f)
+                )
+            } else {
+                BrandIcon(key, size = 46.dp, enabled = ready)
+            }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = Color(0xFF3A0F24), fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
+            Text(subtitle, color = Color(0xFF8C6F6F), style = MaterialTheme.typography.bodySmall)
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color(0xFF7D1634), modifier = Modifier.size(28.dp))
     }
 }
