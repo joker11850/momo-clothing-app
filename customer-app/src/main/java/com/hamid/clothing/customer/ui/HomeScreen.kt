@@ -70,7 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -81,6 +81,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextDirection
 import android.content.Context
+import android.net.Uri
+import android.content.Intent
 import com.hamid.clothing.customer.CustomerStore
 import kotlinx.coroutines.delay
 
@@ -527,90 +529,32 @@ private fun PromoBanner(tag: String, title: String, subtitle: String, handle: St
 
 private const val MOMO_INSTAGRAM = "poshake_momo"
 
-/**
- * Instagram cover: the artwork (res/drawable-nodpi/banner_instagram_momo.jpg) has no text baked in;
- * all texts are drawn here so they stay crisp, RTL-correct and easy to edit.
- * Positions are fractions of the cover size (artwork ratio 1350x530), so it looks the same on every screen.
- */
+/** Opens the Instagram app on the page directly; falls back to the browser if the app is not installed. */
+private fun openInstagramPage(context: Context) {
+    try {
+        val app = Intent(Intent.ACTION_VIEW, Uri.parse("http://instagram.com/_u/$MOMO_INSTAGRAM"))
+            .setPackage("com.instagram.android")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(app)
+    } catch (e: Exception) {
+        openUrl(context, "https://instagram.com/$MOMO_INSTAGRAM")
+    }
+}
+
+/** Instagram cover: the finished artwork (res/drawable-nodpi/banner_instagram_momo.jpg); tapping opens the page. */
 @Composable
 private fun InstagramCover(context: Context) {
     val image = drawableId("banner_instagram_momo") ?: return
     val shape = RoundedCornerShape(28.dp)
-    BoxWithConstraints(
+    Image(
+        painter = painterResource(image),
+        contentDescription = "پیج اینستاگرام momo",
+        contentScale = ContentScale.Crop,
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1350f / 530f)
+            .aspectRatio(1400f / 617f)
             .shadow(4.dp, shape)
             .clip(shape)
-            .clickable { openUrl(context, "https://instagram.com/$MOMO_INSTAGRAM") }
-    ) {
-        val w = maxWidth
-        val h = maxHeight
-        val density = LocalDensity.current
-        fun sz(fraction: Float) = with(density) { (w * fraction).toSp() }
-
-        Image(
-            painter = painterResource(image),
-            contentDescription = "کاور اینستاگرام پوشاک MOMO",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.matchParentSize()
-        )
-
-        @Composable
-        fun Label(cx: Float, cy: Float, halfW: Float, halfH: Float, content: @Composable () -> Unit) {
-            Box(
-                modifier = Modifier
-                    .offset(x = w * (cx - halfW), y = h * (cy - halfH))
-                    .width(w * (halfW * 2))
-                    .height(h * (halfH * 2)),
-                contentAlignment = Alignment.Center
-            ) { content() }
-        }
-
-        // Small line above the title
-        Label(0.423f, 0.242f, 0.25f, 0.06f) {
-            Text(
-                "مدل‌های تازه، استایل‌های جدید",
-                color = Color(0xFFE2BC8F),
-                fontSize = sz(0.0185f),
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
-        }
-        // Title
-        Label(0.423f, 0.405f, 0.29f, 0.1f) {
-            Text(
-                "پیج اینستاگرام momo",
-                color = Color(0xFFFFF1F5),
-                fontSize = sz(0.039f),
-                fontWeight = FontWeight.ExtraBold,
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
-        }
-        // Subtitle
-        Label(0.423f, 0.56f, 0.25f, 0.07f) {
-            Text(
-                "هر روز استایل‌های جدید، ویدئوها و خبرهای روز",
-                color = Color(0xFFEBD3DB),
-                fontSize = sz(0.0185f),
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
-        }
-        // Handle inside the pill (forced LTR so the @ stays at the start)
-        Label(0.455f, 0.824f, 0.095f, 0.07f) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Text(
-                    "@$MOMO_INSTAGRAM",
-                    color = Color(0xFFEBCDA2),
-                    fontSize = sz(0.0225f),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-    }
+            .clickable { openInstagramPage(context) }
+    )
 }
