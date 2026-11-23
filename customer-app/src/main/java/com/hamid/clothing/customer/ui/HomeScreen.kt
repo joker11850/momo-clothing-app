@@ -234,36 +234,44 @@ fun HomeScreen(store: CustomerStore, nav: Nav, padding: PaddingValues) {
     }
 }
 
+/**
+ * Home header: finished artwork (res/drawable-nodpi/home_header_momo.webp).
+ * Heart circle (right) opens favorites, bag circle (left) opens the cart; the cart count badge is drawn here.
+ */
 @Composable
 private fun HomeHeader(store: CustomerStore, nav: Nav, onImport: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        // Favorites shortcut (replaces the old three-line menu: its items now live in "حساب من")
-        Surface(onClick = { nav.go(Screen.Favorites) }, shape = RoundedCornerShape(18.dp), color = RoseLight.copy(alpha = 0.7f), modifier = Modifier.size(48.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Favorite, contentDescription = "علاقه‌مندی‌ها", tint = Burgundy)
-            }
-        }
-        Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(R.drawable.brand_logo),
-                contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp))
-            )
-            Column(modifier = Modifier.padding(start = 10.dp)) {
-                Text(store.info.name, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = Burgundy)
-                Text(store.info.tagline, style = MaterialTheme.typography.labelSmall, color = Muted)
-            }
-        }
-        Surface(onClick = { nav.tab(Screen.Cart) }, shape = RoundedCornerShape(18.dp), color = RoseLight.copy(alpha = 0.7f), modifier = Modifier.size(48.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                BadgedBox(badge = { if (store.cartCount > 0) Badge { Text(faInt(store.cartCount)) } }) {
-                    Icon(Icons.Default.ShoppingBag, contentDescription = "سبد خرید", tint = Burgundy)
-                }
-            }
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth().aspectRatio(5.3640f)) {
+        val w = maxWidth
+        val h = maxHeight
+        Image(
+            painter = painterResource(R.drawable.home_header_momo),
+            contentDescription = "پوشاک MOMO، فروشگاه آنلاین پوشاک",
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.matchParentSize()
+        )
+        val hit = w * 0.14f
+        // heart (right)
+        Box(
+            modifier = Modifier
+                .absoluteOffset(x = w * 0.901f - hit / 2, y = h * 0.463f - hit / 2)
+                .size(hit)
+                .clip(CircleShape)
+                .clickable(role = Role.Button, onClickLabel = "علاقه‌مندی‌ها") { nav.go(Screen.Favorites) }
+        )
+        // bag (left)
+        Box(
+            modifier = Modifier
+                .absoluteOffset(x = w * 0.097f - hit / 2, y = h * 0.463f - hit / 2)
+                .size(hit)
+                .clip(CircleShape)
+                .clickable(role = Role.Button, onClickLabel = "سبد خرید") { nav.tab(Screen.Cart) }
+        )
+        if (store.cartCount > 0) {
+            Badge(
+                containerColor = Color(0xFFE53935),
+                contentColor = Color.White,
+                modifier = Modifier.absoluteOffset(x = w * 0.139f - 8.dp, y = h * 0.238f - 8.dp)
+            ) { Text(faInt(store.cartCount)) }
         }
     }
 }
