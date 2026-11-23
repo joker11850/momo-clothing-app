@@ -29,6 +29,9 @@ object ProductValidator {
         if (product.wholesalePrice > product.retailPrice && product.retailPrice > 0) {
             errors.add("قیمت عمده نباید بیشتر از قیمت خرده باشد")
         }
+        if (product.compareAtPrice > 0 && product.compareAtPrice <= product.retailPrice) {
+            errors.add("قیمت قبل از تخفیف باید بیشتر از قیمت فروش خرده باشد (یا خالی بماند)")
+        }
         if (product.lowStockThreshold < 0) errors.add("حد هشدار موجودی نباید منفی باشد")
 
         if (product.variants.isEmpty()) {

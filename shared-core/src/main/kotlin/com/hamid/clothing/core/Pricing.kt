@@ -56,7 +56,17 @@ object PricingEngine {
             .filter { applies(it, product, customer, couponCode, now) }
             .maxByOrNull { it.percent }
         val percent = best?.percent ?: 0
-        return PriceQuote(source, base, percent, best?.id, Money.afterDiscount(base, percent))
+        val discounted = Money.afterDiscount(base, percent)
+
+        // Shop-set sale: retailPrice is what the customer pays, compareAtPrice is shown struck through.
+        // Retail only (wholesale prices never show a struck price). No stacking: the lower final price wins.
+        val manualSale = !useWholesale && product.retailPrice > 0 && product.compareAtPrice > product.retailPrice
+        if (manualSale && product.retailPrice <= discounted) {
+            val salePercent = (((product.compareAtPrice - product.retailPrice) * 100 + product.compareAtPrice / 2) / product.compareAtPrice)
+                .toInt().coerceIn(1, 99)
+            return PriceQuote(source, product.compareAtPrice, salePercent, null, product.retailPrice)
+        }
+        return PriceQuote(source, base, percent, best?.id, discounted)
     }
 
     private fun applies(d: Discount, product: Product, customer: Customer?, coupon: String?, now: Long): Boolean {

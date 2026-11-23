@@ -341,6 +341,7 @@ object DataCodec {
         o.put("landedCost", p.landedCost)
         o.put("retailPrice", p.retailPrice)
         o.put("wholesalePrice", p.wholesalePrice)
+        o.put("compareAtPrice", p.compareAtPrice)
         o.put("description", p.description)
         o.put("imageUris", strings(p.imageUris))
         if (p.barcode != null) o.put("barcode", p.barcode)
@@ -365,6 +366,7 @@ object DataCodec {
         landedCost = o.optLong("landedCost", 0L),
         retailPrice = o.optLong("retailPrice", 0L),
         wholesalePrice = o.optLong("wholesalePrice", 0L),
+        compareAtPrice = o.optLong("compareAtPrice", 0L),
         variants = o.optJSONArray("variants").objects { Variant(it.getString("color"), it.getString("size"), it.optInt("stock", 0)) },
         description = o.optString("description", ""),
         imageUris = o.optJSONArray("imageUris").strings(),
@@ -642,6 +644,7 @@ object DataCodec {
         o.put("description", p.description)
         o.put("retailPrice", p.retailPrice)
         o.put("wholesalePrice", p.wholesalePrice)
+        o.put("compareAtPrice", p.compareAtPrice)
         if (p.barcode != null) o.put("barcode", p.barcode)
         o.put("lowStockThreshold", p.lowStockThreshold)
         o.put("images", strings(p.imageUris))
@@ -664,6 +667,7 @@ object DataCodec {
         landedCost = 0L,
         retailPrice = o.optLong("retailPrice", 0L),
         wholesalePrice = o.optLong("wholesalePrice", 0L),
+        compareAtPrice = o.optLong("compareAtPrice", 0L),
         variants = o.optJSONArray("variants").objects { Variant(it.getString("color"), it.getString("size"), it.optInt("stock", 0)) },
         description = o.optString("description", ""),
         imageUris = o.optJSONArray("images").strings(),

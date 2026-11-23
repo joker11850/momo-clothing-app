@@ -45,10 +45,12 @@ data class Product(
     val imageUris: List<String> = emptyList(),
     val barcode: String? = null,
     val lowStockThreshold: Int = 3,
-    val active: Boolean = true
+    val active: Boolean = true,
+    /** Optional "price before the sale" shown struck through; the retail price is what the customer pays. 0 = no sale. */
+    val compareAtPrice: Long = 0L
 ) {
     init {
-        require(purchasePrice >= 0 && landedCost >= 0 && retailPrice >= 0 && wholesalePrice >= 0) {
+        require(purchasePrice >= 0 && landedCost >= 0 && retailPrice >= 0 && wholesalePrice >= 0 && compareAtPrice >= 0) {
             "prices must not be negative"
         }
     }

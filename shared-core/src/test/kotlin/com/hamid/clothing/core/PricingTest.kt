@@ -78,4 +78,33 @@ class PricingTest {
         assertEquals(1_000_000L, PricingEngine.quote(p, null, emptyMap(), listOf(coupon), "WRONG", now).unitPrice)
         assertEquals(800_000L, PricingEngine.quote(p, null, emptyMap(), listOf(coupon), " spring ", now).unitPrice)
     }
+
+    @Test fun shopSetSaleShowsStruckPriceAndPercent() {
+        val sale = p.copy(compareAtPrice = 1_250_000L)
+        val q = PricingEngine.quote(sale, null, emptyMap(), emptyList(), null, now)
+        assertEquals(1_250_000L, q.basePrice)
+        assertEquals(1_000_000L, q.unitPrice)
+        assertEquals(20, q.discountPercent)
+        assertNull(q.discountId)
+    }
+
+    @Test fun shopSetSaleIsIgnoredForWholesaleAndCustomPrice() {
+        val sale = p.copy(compareAtPrice = 1_250_000L)
+        val w = PricingEngine.quote(sale, Fixtures.wholesaleCustomer(), emptyMap(), emptyList(), null, now)
+        assertEquals(800_000L, w.unitPrice)
+        assertEquals(0, w.discountPercent)
+    }
+
+    @Test fun compareAtNotHigherThanRetailMeansNoSale() {
+        val q = PricingEngine.quote(p.copy(compareAtPrice = 900_000L), null, emptyMap(), emptyList(), null, now)
+        assertEquals(1_000_000L, q.unitPrice)
+        assertEquals(0, q.discountPercent)
+    }
+
+    @Test fun biggerDiscountBeatsSmallShopSale() {
+        val sale = p.copy(compareAtPrice = 1_050_000L)
+        val q = PricingEngine.quote(sale, null, emptyMap(), listOf(Discount("d1", "عمومی", 20)), null, now)
+        assertEquals(800_000L, q.unitPrice)
+        assertEquals(20, q.discountPercent)
+    }
 }

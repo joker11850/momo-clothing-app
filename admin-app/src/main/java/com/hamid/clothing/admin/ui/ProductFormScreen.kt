@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.hamid.clothing.admin.AdminStore
+import com.hamid.clothing.core.PersianFormat
 import com.hamid.clothing.core.Product
 import com.hamid.clothing.core.Variant
 
@@ -79,6 +80,7 @@ fun ProductFormScreen(
     var landedText by remember(productId) { mutableStateOf(existing?.landedCost?.toString() ?: "") }
     var retailText by remember(productId) { mutableStateOf(existing?.retailPrice?.toString() ?: "") }
     var wholesaleText by remember(productId) { mutableStateOf(existing?.wholesalePrice?.toString() ?: "") }
+    var compareText by remember(productId) { mutableStateOf(existing?.compareAtPrice?.takeIf { it > 0 }?.toString() ?: "") }
     var thresholdText by remember(productId) { mutableStateOf((existing?.lowStockThreshold ?: 3).toString()) }
     var active by remember(productId) { mutableStateOf(existing?.active ?: true) }
     val variants = remember(productId) {
@@ -129,6 +131,7 @@ fun ProductFormScreen(
             landedCost = landed,
             retailPrice = parseMoney(retailText),
             wholesalePrice = parseMoney(wholesaleText),
+            compareAtPrice = parseMoney(compareText),
             variants = variants.map { Variant(it.color.trim(), it.size.trim(), parseInt(it.stock)) },
             description = description.trim(),
             imageUris = images.toList(),
@@ -235,7 +238,18 @@ fun ProductFormScreen(
             SectionLabel("قیمت‌ها (تومان)")
             MoneyField("قیمت خرید", purchaseText, { purchaseText = it })
             MoneyField("قیمت تمام‌شده (خالی = برابر قیمت خرید)", landedText, { landedText = it })
-            MoneyField("قیمت فروش خرده", retailText, { retailText = it })
+            MoneyField("قیمت فروش خرده (قیمت قرمز)", retailText, { retailText = it })
+            MoneyField("قیمت قبل از تخفیف (اختیاری، خط‌خورده)", compareText, { compareText = it })
+            run {
+                val retail = parseMoney(retailText)
+                val compare = parseMoney(compareText)
+                val hint = when {
+                    compare <= 0 -> "خالی = کالا تخفیف ندارد"
+                    retail <= 0 || compare <= retail -> "قیمت قبل از تخفیف باید از قیمت فروش بیشتر باشد"
+                    else -> "درصد تخفیف خودکار: ${PersianFormat.digits((((compare - retail) * 100 + compare / 2) / compare).toString())}٪ و این کالا در «فروش ویژه» صفحه اصلی می‌آید"
+                }
+                Text(hint, style = MaterialTheme.typography.bodySmall, color = Muted)
+            }
             MoneyField("قیمت فروش عمده", wholesaleText, { wholesaleText = it })
 
             SectionLabel("رنگ، سایز و موجودی")
