@@ -57,6 +57,11 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.hamid.clothing.customer.R
 import com.hamid.clothing.core.CustomerType
 import com.hamid.clothing.core.FaLabels
 import com.hamid.clothing.core.InvoiceText
@@ -88,29 +93,18 @@ private val AccPeach = Brush.verticalGradient(listOf(Color(0xFFFFEEDD), Color(0x
 private val AccRowBg = Brush.horizontalGradient(listOf(Color(0xFFFBEAE2), Color(0xFFFFFBF7)))
 private val AccGoldBorder = Brush.horizontalGradient(listOf(Color(0xFFE2B66A), Color(0xFFF3DDB0), Color(0xFFE2B66A)))
 
-/** Burgundy pill header with a gold outline ("حساب من"). */
+/** Header banner "حساب من" (res/drawable-nodpi/account_header_momo.webp). */
 @Composable
 private fun AccountHeader(title: String) {
-    val shape = RoundedCornerShape(30.dp)
-    Box(
+    Image(
+        painter = painterResource(R.drawable.account_header_momo),
+        contentDescription = title,
+        contentScale = ContentScale.FillBounds,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .shadow(6.dp, shape)
-            .clip(shape)
-            .background(Brush.horizontalGradient(listOf(AccBurgundyDeep, AccBurgundy)))
-            .border(1.5.dp, AccGoldBorder, shape)
-            .padding(horizontal = 20.dp, vertical = 14.dp)
-    ) {
-        Row(
-            modifier = Modifier.align(Alignment.Center),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(Icons.Outlined.Person, contentDescription = null, tint = Color(0xFFF3DDB0), modifier = Modifier.size(30.dp))
-            Text(title, color = Color.White, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleLarge)
-        }
-    }
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .aspectRatio(5.0909f)
+    )
 }
 
 /** Menu row: round icon on the right, title + subtitle, chevron on the left (RTL). */
