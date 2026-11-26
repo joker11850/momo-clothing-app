@@ -645,6 +645,7 @@ object DataCodec {
         o.put("retailPrice", p.retailPrice)
         o.put("wholesalePrice", p.wholesalePrice)
         o.put("compareAtPrice", p.compareAtPrice)
+        o.put("active", p.active)
         if (p.barcode != null) o.put("barcode", p.barcode)
         o.put("lowStockThreshold", p.lowStockThreshold)
         o.put("images", strings(p.imageUris))
@@ -673,7 +674,7 @@ object DataCodec {
         imageUris = o.optJSONArray("images").strings(),
         barcode = o.nullableString("barcode"),
         lowStockThreshold = o.optInt("lowStockThreshold", 3),
-        active = true
+        active = o.optBoolean("active", true)
     )
 
     private fun discount(d: Discount): JSONObject {

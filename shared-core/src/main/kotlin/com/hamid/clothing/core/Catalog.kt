@@ -8,6 +8,9 @@ object TextNorm {
             .replace('ك', 'ک')
             .trim()
             .lowercase()
+
+    /** Makes Persian and Latin barcode digit forms compare equally. */
+    fun normalizeBarcode(input: String): String = Validators.toLatinDigits(input).trim()
 }
 
 object ProductValidator {
@@ -45,7 +48,9 @@ object ProductValidator {
         }
 
         val barcode = product.barcode
-        if (!barcode.isNullOrBlank() && rest.any { it.barcode?.trim() == barcode.trim() }) {
+        if (!barcode.isNullOrBlank() && rest.any {
+                it.barcode?.let(TextNorm::normalizeBarcode) == TextNorm.normalizeBarcode(barcode)
+            }) {
             errors.add("بارکد تکراری است")
         }
         return errors
@@ -99,7 +104,7 @@ object CatalogSearch {
                     q.isEmpty() ||
                         TextNorm.normalize(p.name).contains(q) ||
                         TextNorm.normalize(p.code).contains(q) ||
-                        (p.barcode?.contains(q) ?: false)
+                        (p.barcode != null && TextNorm.normalizeBarcode(p.barcode).contains(TextNorm.normalizeBarcode(query)))
                     )
         }
     }

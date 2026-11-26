@@ -120,32 +120,36 @@ fun ProductFormScreen(
     var confirmDelete by remember { mutableStateOf(false) }
 
     fun save() {
-        val purchase = parseMoney(purchaseText)
-        val landed = if (landedText.isBlank()) purchase else parseMoney(landedText)
-        val product = Product(
-            id = existing?.id ?: store.newId(),
-            code = code.trim(),
-            name = name.trim(),
-            categoryId = categoryId,
-            purchasePrice = purchase,
-            landedCost = landed,
-            retailPrice = parseMoney(retailText),
-            wholesalePrice = parseMoney(wholesaleText),
-            compareAtPrice = parseMoney(compareText),
-            variants = variants.map { Variant(it.color.trim(), it.size.trim(), parseInt(it.stock)) },
-            description = description.trim(),
-            imageUris = images.toList(),
-            barcode = barcode.trim().ifBlank { null },
-            lowStockThreshold = parseInt(thresholdText, 3),
-            active = active
-        )
-        val result = store.saveProduct(product)
-        if (result.isEmpty()) {
-            savedFlag[0] = true
-            (existing?.imageUris ?: emptyList()).filter { it !in images }.forEach { store.images.delete(it) }
-            onDone()
-        } else {
-            errors = result
+        try {
+            val purchase = parseMoney(purchaseText)
+            val landed = if (landedText.isBlank()) purchase else parseMoney(landedText)
+            val product = Product(
+                id = existing?.id ?: store.newId(),
+                code = code.trim(),
+                name = name.trim(),
+                categoryId = categoryId,
+                purchasePrice = purchase,
+                landedCost = landed,
+                retailPrice = parseMoney(retailText),
+                wholesalePrice = parseMoney(wholesaleText),
+                compareAtPrice = parseMoney(compareText),
+                variants = variants.map { Variant(it.color.trim(), it.size.trim(), parseInt(it.stock)) },
+                description = description.trim(),
+                imageUris = images.toList(),
+                barcode = barcode.trim().ifBlank { null },
+                lowStockThreshold = parseInt(thresholdText, 3),
+                active = active
+            )
+            val result = store.saveProduct(product)
+            if (result.isEmpty()) {
+                savedFlag[0] = true
+                (existing?.imageUris ?: emptyList()).filter { it !in images }.forEach { store.images.delete(it) }
+                onDone()
+            } else {
+                errors = result
+            }
+        } catch (e: IllegalArgumentException) {
+            errors = listOf("مقدار قیمت، موجودی یا حد هشدار معتبر نیست")
         }
     }
 
